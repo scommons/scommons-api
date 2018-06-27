@@ -1,19 +1,21 @@
 package definitions
 
-import common.{Common, Libs, TestLibs}
+import common.{Libs, TestLibs}
 import org.scalajs.sbtplugin.ScalaJSPlugin.autoImport._
 import org.scalajs.sbtplugin.cross.CrossProject
 import sbt.Keys._
 import sbt._
+import scommons.sbtplugin.project.CommonModule
 
-object ScommonsApiJodaTime {
+object ApiJodaTime {
 
   val id: String = "scommons-api-joda-time"
 
   def base: File = file(id)
 
   lazy val `scommons-api-joda-time`: CrossProject = crossProject.in(base)
-    .settings(Common.settings: _*)
+    .settings(CommonModule.settings: _*)
+    .settings(ApiModule.settings: _*)
     .settings(
       description := "Common Scala/Scala.js joda-time play-json conversions for REST API",
 

@@ -4,19 +4,17 @@ import common.{Libs, TestLibs}
 import sbt.Keys._
 import sbt._
 
-object ScommonsApiPlayWs extends BasicModule {
+object ApiPlayWs extends ApiModule {
 
   override val id: String = "scommons-api-play-ws"
 
-  override def definition: Project = {
-    super.definition
-      .settings(
-        description := "Common Scala ApiHttpClient implementation using play-ws library"
-      )
-  }
+  override def definition: Project = super.definition
+    .settings(
+      description := "Common Scala ApiHttpClient implementation using play-ws library"
+    )
 
   override val internalDependencies: Seq[ClasspathDep[ProjectReference]] = Seq(
-    ScommonsApiCore.jvm
+    ApiCore.jvm
   )
 
   override val runtimeDependencies: Def.Initialize[Seq[ModuleID]] = Def.setting(Seq(

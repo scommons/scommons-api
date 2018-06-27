@@ -1,20 +1,22 @@
 package definitions
 
-import common.{Common, Libs, TestLibs}
+import common.{Libs, TestLibs}
 import org.scalajs.sbtplugin.ScalaJSPlugin.autoImport._
 import org.scalajs.sbtplugin.cross.CrossProject
 import sbt.Keys._
 import sbt._
+import scommons.sbtplugin.project.CommonModule
 import scoverage.ScoverageKeys._
 
-object ScommonsApiCore {
+object ApiCore {
 
   val id: String = "scommons-api-core"
 
   def base: File = file(id)
 
   lazy val `scommons-api-core`: CrossProject = crossProject.in(base)
-    .settings(Common.settings: _*)
+    .settings(CommonModule.settings: _*)
+    .settings(ApiModule.settings: _*)
     .settings(
       description := "Common Scala/Scala.js REST API protocol definitions",
 

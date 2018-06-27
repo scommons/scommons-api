@@ -1,8 +1,9 @@
-import common.Common
 import definitions._
+import scommons.sbtplugin.project.CommonModule
 
 lazy val `scommons-api` = (project in file("."))
-  .settings(Common.settings)
+  .settings(CommonModule.settings: _*)
+  .settings(ApiModule.settings: _*)
   .settings(
     skip in publish := true,
     publish := (),
@@ -19,8 +20,8 @@ lazy val `scommons-api` = (project in file("."))
   `scommons-api-play-ws`
 )
 
-lazy val `scommons-api-core-jvm` = ScommonsApiCore.jvm
-lazy val `scommons-api-core-js` = ScommonsApiCore.js
-lazy val `scommons-api-joda-time-jvm` = ScommonsApiJodaTime.jvm
-lazy val `scommons-api-joda-time-js` = ScommonsApiJodaTime.js
-lazy val `scommons-api-play-ws` = ScommonsApiPlayWs.definition
+lazy val `scommons-api-core-jvm` = ApiCore.jvm
+lazy val `scommons-api-core-js` = ApiCore.js
+lazy val `scommons-api-joda-time-jvm` = ApiJodaTime.jvm
+lazy val `scommons-api-joda-time-js` = ApiJodaTime.js
+lazy val `scommons-api-play-ws` = ApiPlayWs.definition
