@@ -1,4 +1,4 @@
-package scommons.api.permission
+package scommons.api.admin.permission
 
 import org.scalatest.{FlatSpec, Matchers}
 

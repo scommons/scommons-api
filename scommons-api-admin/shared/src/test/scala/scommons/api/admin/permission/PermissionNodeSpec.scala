@@ -1,7 +1,7 @@
-package scommons.api.permission
+package scommons.api.admin.permission
 
 import org.scalatest.{FlatSpec, Matchers}
-import scommons.api.permission.PermissionNodeSpec._
+import scommons.api.admin.permission.PermissionNodeSpec._
 
 class PermissionNodeSpec extends FlatSpec with Matchers {
 

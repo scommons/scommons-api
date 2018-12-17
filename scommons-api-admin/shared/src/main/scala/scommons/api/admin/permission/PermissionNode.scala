@@ -1,4 +1,4 @@
-package scommons.api.permission
+package scommons.api.admin.permission
 
 abstract class PermissionNode(val name: String,
                               val title: String,

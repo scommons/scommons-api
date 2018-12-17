@@ -1,4 +1,4 @@
-package scommons.api.permission
+package scommons.api.admin.permission
 
 case class Permission(name: String, title: String) {
   
