@@ -1,19 +1,22 @@
 package scommons.api.admin.permission
 
-case class Permission(name: String, title: String) {
+class Permission private(val name: String, val title: String) {
   
-  require(name.trim.nonEmpty, "name should be non empty")
-  require(title.trim.nonEmpty, "title should be non empty")
+  require(name.trim.nonEmpty, "name should not be empty")
+  require(title.trim.nonEmpty, "title should not be empty")
 
   override def toString: String = name
 }
 
 object Permission {
 
-  val read = Permission("read", "Read")
-  val create = Permission("create", "Create")
-  val update = Permission("update", "Update")
-  val rename = Permission("rename", "Rename")
-  val delete = Permission("delete", "Delete")
-  val print = Permission("print", "Print")
+  def apply(name: String, title: String): Permission =
+    new Permission(name.trim, title.trim)
+
+  def read = Permission("read", "Read")
+  def create = Permission("create", "Create")
+  def update = Permission("update", "Update")
+  def rename = Permission("rename", "Rename")
+  def delete = Permission("delete", "Delete")
+  def print = Permission("print", "Print")
 }

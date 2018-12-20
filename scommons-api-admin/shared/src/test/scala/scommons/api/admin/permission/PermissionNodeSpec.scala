@@ -12,7 +12,7 @@ class PermissionNodeSpec extends FlatSpec with Matchers {
     }
     
     //then
-    e.getMessage should include("name should be non empty")
+    e.getMessage should include("name should not be empty")
   }
   
   it should "fail to create new PermissionNode if title is empty" in {
@@ -22,7 +22,7 @@ class PermissionNodeSpec extends FlatSpec with Matchers {
     }
     
     //then
-    e.getMessage should include("title should be non empty")
+    e.getMessage should include("title should not be empty")
   }
   
   it should "return name when toString" in {
@@ -41,7 +41,7 @@ class PermissionNodeSpec extends FlatSpec with Matchers {
     val node = TestPermNode
     
     //when
-    val result = node.getNodes
+    val result = node.nodes
     
     //then
     result shouldBe List(TestPermSubNode)
@@ -52,7 +52,7 @@ class PermissionNodeSpec extends FlatSpec with Matchers {
     val node = TestPermNode
     
     //when
-    val result = node.getPermissions
+    val result = node.permissions
     
     //then
     result shouldBe List(TestPermNode.testWrite, TestPermNode.testRead)

@@ -11,7 +11,7 @@ class PermissionSpec extends FlatSpec with Matchers {
     }
     
     //then
-    e.getMessage should include("name should be non empty")
+    e.getMessage should include("name should not be empty")
   }
   
   it should "fail to create new Permission if title is empty" in {
@@ -21,7 +21,7 @@ class PermissionSpec extends FlatSpec with Matchers {
     }
     
     //then
-    e.getMessage should include("title should be non empty")
+    e.getMessage should include("title should not be empty")
   }
   
   it should "return name when toString" in {
@@ -30,12 +30,18 @@ class PermissionSpec extends FlatSpec with Matchers {
   }
   
   it should "define reusable permissions" in {
+    def assertPermission(perm: Permission, expected: (String, String)): Unit = {
+      perm match {
+        case p => (p.name, p.title) shouldBe expected
+      }
+    }
+    
     //when & then
-    Permission.read shouldBe Permission("read", "Read")
-    Permission.create shouldBe Permission("create", "Create")
-    Permission.update shouldBe Permission("update", "Update")
-    Permission.rename shouldBe Permission("rename", "Rename")
-    Permission.delete shouldBe Permission("delete", "Delete")
-    Permission.print shouldBe Permission("print", "Print")
+    assertPermission(Permission.read, ("read", "Read"))
+    assertPermission(Permission.create, ("create", "Create"))
+    assertPermission(Permission.update, ("update", "Update"))
+    assertPermission(Permission.rename, ("rename", "Rename"))
+    assertPermission(Permission.delete, ("delete", "Delete"))
+    assertPermission(Permission.print, ("print", "Print"))
   }
 }
