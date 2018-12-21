@@ -16,21 +16,29 @@ class ApiHttpClientSpec extends AsyncFlatSpec
 
   private val baseUrl = "http://test.api.client"
   private val params = List("p1" -> "1", "p2" -> "2")
+  private val headers = List("h1" -> "11", "h2" -> "22")
   private val timeout = 5.seconds
   private val defaultTimeout = 25.seconds
 
   private type HttpExecute =
-    (String, String, List[(String, String)], Option[String], FiniteDuration) => Future[Option[ApiHttpResponse]]
+    (String, String, List[(String, String)], List[(String, String)], Option[String], FiniteDuration) =>
+      Future[Option[ApiHttpResponse]]
+
+  private def stubExec = stubFunction[
+    String, String, List[(String, String)], List[(String, String)], Option[String], FiniteDuration,
+    Future[Option[ApiHttpResponse]]
+    ]
 
   private class TestHttpClient(exec: HttpExecute) extends ApiHttpClient(baseUrl, defaultTimeout) {
     protected def execute(method: String,
                           targetUrl: String,
                           params: List[(String, String)],
+                          headers: List[(String, String)],
                           jsonBody: Option[String],
                           timeout: FiniteDuration
                          ): Future[Option[ApiHttpResponse]] = {
 
-      exec(method, targetUrl, params, jsonBody, timeout)
+      exec(method, targetUrl, params, headers, jsonBody, timeout)
     }
   }
 
@@ -39,15 +47,15 @@ class ApiHttpClientSpec extends AsyncFlatSpec
     val url = s"/api/get/url"
     val expectedResult = List(TestRespData(1, "test"))
     val expectedResponse = ApiHttpResponse(200, stringify(toJson(expectedResult)))
-    val execute = stubFunction[String, String, List[(String, String)], Option[String], FiniteDuration, Future[Option[ApiHttpResponse]]]
+    val execute = stubExec
     val client = new TestHttpClient(execute)
 
-    execute.when(*, *, *, *, *).returns(Future.successful(Some(expectedResponse)))
+    execute.when(*, *, *, *, *, *).returns(Future.successful(Some(expectedResponse)))
 
     //when
-    client.execGet[List[TestRespData]](url, params).map { result =>
+    client.execGet[List[TestRespData]](url, params, headers).map { result =>
       //then
-      execute.verify("GET", s"$baseUrl$url", params, None, defaultTimeout)
+      execute.verify("GET", s"$baseUrl$url", params, headers, None, defaultTimeout)
 
       result shouldBe expectedResult
     }
@@ -58,15 +66,15 @@ class ApiHttpClientSpec extends AsyncFlatSpec
     val url = s"/api/get/url"
     val expectedResult = List(TestRespData(1, "test"))
     val expectedResponse = ApiHttpResponse(200, stringify(toJson(expectedResult)))
-    val execute = stubFunction[String, String, List[(String, String)], Option[String], FiniteDuration, Future[Option[ApiHttpResponse]]]
+    val execute = stubExec
     val client = new TestHttpClient(execute)
 
-    execute.when(*, *, *, *, *).returns(Future.successful(Some(expectedResponse)))
+    execute.when(*, *, *, *, *, *).returns(Future.successful(Some(expectedResponse)))
 
     //when
-    client.execGet[List[TestRespData]](url, params, timeout).map { result =>
+    client.execGet[List[TestRespData]](url, params, headers, timeout).map { result =>
       //then
-      execute.verify("GET", s"$baseUrl$url", params, None, timeout)
+      execute.verify("GET", s"$baseUrl$url", params, headers, None, timeout)
 
       result shouldBe expectedResult
     }
@@ -78,15 +86,15 @@ class ApiHttpClientSpec extends AsyncFlatSpec
     val data = TestReqData(1)
     val expectedResult = List(TestRespData(2, "test"))
     val expectedResponse = ApiHttpResponse(200, stringify(toJson(expectedResult)))
-    val execute = stubFunction[String, String, List[(String, String)], Option[String], FiniteDuration, Future[Option[ApiHttpResponse]]]
+    val execute = stubExec
     val client = new TestHttpClient(execute)
 
-    execute.when(*, *, *, *, *).returns(Future.successful(Some(expectedResponse)))
+    execute.when(*, *, *, *, *, *).returns(Future.successful(Some(expectedResponse)))
 
     //when
-    client.execPost[TestReqData, List[TestRespData]](url, data, params, timeout).map { result =>
+    client.execPost[TestReqData, List[TestRespData]](url, data, params, headers, timeout).map { result =>
       //then
-      execute.verify("POST", s"$baseUrl$url", params, Some(stringify(toJson(data))), timeout)
+      execute.verify("POST", s"$baseUrl$url", params, headers, Some(stringify(toJson(data))), timeout)
 
       result shouldBe expectedResult
     }
@@ -98,15 +106,15 @@ class ApiHttpClientSpec extends AsyncFlatSpec
     val data = TestReqData(1)
     val expectedResult = List(TestRespData(2, "test"))
     val expectedResponse = ApiHttpResponse(200, stringify(toJson(expectedResult)))
-    val execute = stubFunction[String, String, List[(String, String)], Option[String], FiniteDuration, Future[Option[ApiHttpResponse]]]
+    val execute = stubExec
     val client = new TestHttpClient(execute)
 
-    execute.when(*, *, *, *, *).returns(Future.successful(Some(expectedResponse)))
+    execute.when(*, *, *, *, *, *).returns(Future.successful(Some(expectedResponse)))
 
     //when
-    client.execPut[TestReqData, List[TestRespData]](url, data, params, timeout).map { result =>
+    client.execPut[TestReqData, List[TestRespData]](url, data, params, headers, timeout).map { result =>
       //then
-      execute.verify("PUT", s"$baseUrl$url", params, Some(stringify(toJson(data))), timeout)
+      execute.verify("PUT", s"$baseUrl$url", params, headers, Some(stringify(toJson(data))), timeout)
 
       result shouldBe expectedResult
     }
@@ -118,15 +126,15 @@ class ApiHttpClientSpec extends AsyncFlatSpec
     val data = TestReqData(1)
     val expectedResult = List(TestRespData(2, "test"))
     val expectedResponse = ApiHttpResponse(200, stringify(toJson(expectedResult)))
-    val execute = stubFunction[String, String, List[(String, String)], Option[String], FiniteDuration, Future[Option[ApiHttpResponse]]]
+    val execute = stubExec
     val client = new TestHttpClient(execute)
 
-    execute.when(*, *, *, *, *).returns(Future.successful(Some(expectedResponse)))
+    execute.when(*, *, *, *, *, *).returns(Future.successful(Some(expectedResponse)))
 
     //when
-    client.execDelete[TestReqData, List[TestRespData]](url, Some(data), params, timeout).map { result =>
+    client.execDelete[TestReqData, List[TestRespData]](url, Some(data), params, headers, timeout).map { result =>
       //then
-      execute.verify("DELETE", s"$baseUrl$url", params, Some(stringify(toJson(data))), timeout)
+      execute.verify("DELETE", s"$baseUrl$url", params, headers, Some(stringify(toJson(data))), timeout)
 
       result shouldBe expectedResult
     }

@@ -29,6 +29,7 @@ class WsApiHttpClient(baseUrl: String,
   protected[ws] def execute(method: String,
                             targetUrl: String,
                             params: List[(String, String)],
+                            headers: List[(String, String)],
                             jsonBody: Option[String],
                             timeout: FiniteDuration): Future[Option[ApiHttpResponse]] = {
 
@@ -41,6 +42,7 @@ class WsApiHttpClient(baseUrl: String,
     execute(req.withMethod(method)
       .withFollowRedirects(true)
       .withQueryStringParameters(params: _*)
+      .withHttpHeaders(headers: _*)
       .withRequestTimeout(timeout)
     ).map { resp =>
       Some(ApiHttpResponse(resp.status, resp.body))

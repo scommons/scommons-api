@@ -14,6 +14,7 @@ class JsApiHttpClient(baseUrl: String, defaultTimeout: FiniteDuration = 30.secon
   protected[js] def execute(method: String,
                             targetUrl: String,
                             params: List[(String, String)],
+                            headers: List[(String, String)],
                             jsonBody: Option[String],
                             timeout: FiniteDuration): Future[Option[ApiHttpResponse]] = {
 
@@ -21,11 +22,14 @@ class JsApiHttpClient(baseUrl: String, defaultTimeout: FiniteDuration = 30.secon
     req.open(method, JsApiHttpClient.getFullUrl(targetUrl, params))
     req.timeout = timeout.toMillis.toInt
 
-    val headers =
-      if (jsonBody.isDefined) Map("Content-Type" -> "application/json")
-      else Map.empty[String, String]
+    val allHeaders = {
+      if (jsonBody.isDefined) {
+        headers ++ Map("Content-Type" -> "application/json")
+      }
+      else headers
+    }
 
-    headers.foreach(x => req.setRequestHeader(x._1, x._2))
+    allHeaders.foreach(x => req.setRequestHeader(x._1, x._2))
 
     execute(req, jsonBody).map {
       case res if res.status == 0 => None //timeout

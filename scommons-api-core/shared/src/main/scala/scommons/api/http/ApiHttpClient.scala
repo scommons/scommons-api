@@ -11,42 +11,47 @@ abstract class ApiHttpClient(baseUrl: String,
 
   def execGet[R](url: String,
                  params: List[(String, String)] = Nil,
+                 headers: List[(String, String)] = Nil,
                  timeout: FiniteDuration = defaultTimeout
                 )(implicit jsonReads: Reads[R]): Future[R] = {
 
-    exec[String, R]("GET", url, params, None, timeout)
+    exec[String, R]("GET", url, params, headers, None, timeout)
   }
 
   def execPost[D, R](url: String,
                      data: D,
                      params: List[(String, String)] = Nil,
+                     headers: List[(String, String)] = Nil,
                      timeout: FiniteDuration = defaultTimeout
                     )(implicit jsonWrites: Writes[D], jsonReads: Reads[R]): Future[R] = {
 
-    exec("POST", url, params, Some(data), timeout)
+    exec("POST", url, params, headers, Some(data), timeout)
   }
 
   def execPut[D, R](url: String,
                     data: D,
                     params: List[(String, String)] = Nil,
+                    headers: List[(String, String)] = Nil,
                     timeout: FiniteDuration = defaultTimeout
                    )(implicit jsonWrites: Writes[D], jsonReads: Reads[R]): Future[R] = {
 
-    exec("PUT", url, params, Some(data), timeout)
+    exec("PUT", url, params, headers, Some(data), timeout)
   }
 
   def execDelete[D, R](url: String,
                        data: Option[D] = None,
                        params: List[(String, String)] = Nil,
+                       headers: List[(String, String)] = Nil,
                        timeout: FiniteDuration = defaultTimeout
                       )(implicit jsonWrites: Writes[D], jsonReads: Reads[R]): Future[R] = {
 
-    exec("DELETE", url, params, data, timeout)
+    exec("DELETE", url, params, headers, data, timeout)
   }
 
   private def exec[T, R](method: String,
                          url: String,
                          params: List[(String, String)],
+                         headers: List[(String, String)],
                          data: Option[T],
                          timeout: FiniteDuration
                         )(implicit jsonWrites: Writes[T], jsonReads: Reads[R]): Future[R] = {
@@ -54,19 +59,21 @@ abstract class ApiHttpClient(baseUrl: String,
     val targetUrl = getTargetUrl(baseUrl, url)
 
     execute(
-      method,
-      targetUrl,
-      params,
-      data.map { d =>
+      method = method,
+      targetUrl = targetUrl,
+      params = params,
+      headers = headers,
+      jsonBody = data.map { d =>
         Json.stringify(Json.toJson(d))
       },
-      timeout
+      timeout = timeout
     ).map(parseResponse(targetUrl, _))
   }
 
   protected def execute(method: String,
                         targetUrl: String,
                         params: List[(String, String)],
+                        headers: List[(String, String)],
                         jsonBody: Option[String],
                         timeout: FiniteDuration
                        ): Future[Option[ApiHttpResponse]]

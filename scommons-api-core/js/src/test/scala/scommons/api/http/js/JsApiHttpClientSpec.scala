@@ -30,6 +30,7 @@ class JsApiHttpClientSpec extends AsyncFlatSpec
   }
 
   private val params = List("p1" -> "1", "p2" -> "2")
+  private val headers = List("h1" -> "11", "h2" -> "22")
   private val timeout = 5.seconds
 
   it should "execute request without body" in {
@@ -43,14 +44,18 @@ class JsApiHttpClientSpec extends AsyncFlatSpec
 
     (req.open _).when(*, *).returns(())
     (req.timeout_= _).when(*).returns(())
+    (req.setRequestHeader _).when(*, *).returns(())
     (resp.status _).when().returns(expectedResult.status)
     (resp.responseText _).when().returns(expectedResult.body)
 
     //when
-    client.execute("GET", targetUrl, params, body, timeout).map { result =>
+    client.execute("GET", targetUrl, params, headers, body, timeout).map { result =>
       //then
       (req.open _).verify("GET", getFullUrl(targetUrl, params))
       (req.timeout_= _).verify(timeout.toMillis)
+      headers.foreach { x =>
+        (req.setRequestHeader _).verify(x._1, x._2)
+      }
 
       result shouldBe Some(expectedResult)
     }
@@ -72,11 +77,13 @@ class JsApiHttpClientSpec extends AsyncFlatSpec
     (resp.responseText _).when().returns(expectedResult.body)
 
     //when
-    client.execute("POST", targetUrl, params, body, timeout).map { result =>
+    client.execute("POST", targetUrl, params, headers, body, timeout).map { result =>
       //then
       (req.open _).verify("POST", getFullUrl(targetUrl, params))
       (req.timeout_= _).verify(timeout.toMillis)
-      (req.setRequestHeader _).verify("Content-Type", "application/json")
+      (headers ++ Map("Content-Type" -> "application/json")).foreach { x =>
+        (req.setRequestHeader _).verify(x._1, x._2)
+      }
 
       result shouldBe Some(expectedResult)
     }
@@ -91,13 +98,17 @@ class JsApiHttpClientSpec extends AsyncFlatSpec
 
     (req.open _).when(*, *).returns(())
     (req.timeout_= _).when(*).returns(())
+    (req.setRequestHeader _).when(*, *).returns(())
     (resp.status _).when().returns(0)
 
     //when
-    client.execute("GET", targetUrl, params, None, timeout).map { result =>
+    client.execute("GET", targetUrl, params, headers, None, timeout).map { result =>
       //then
       (req.open _).verify("GET", getFullUrl(targetUrl, params))
       (req.timeout_= _).verify(timeout.toMillis)
+      headers.foreach { x =>
+        (req.setRequestHeader _).verify(x._1, x._2)
+      }
 
       result shouldBe None
     }

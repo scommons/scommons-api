@@ -45,6 +45,7 @@ class WsApiHttpClientSpec extends FlatSpec
   private val client = spy(new TestWsClient())
 
   private val params = List("p1" -> "1", "p2" -> "2")
+  private val headers = List("h1" -> "11", "h2" -> "22")
   private val timeout = 5.seconds
 
   override protected def beforeEach(): Unit = {
@@ -68,12 +69,12 @@ class WsApiHttpClientSpec extends FlatSpec
     when(response.body).thenReturn(expectedResult.body)
 
     //when
-    val result = client.execute("GET", targetUrl, params, body, timeout).futureValue
+    val result = client.execute("GET", targetUrl, params, headers, body, timeout).futureValue
 
     //then
     result shouldBe Some(expectedResult)
 
-    assertRequest("GET", targetUrl, params, body, timeout)
+    assertRequest("GET", targetUrl, params, headers, body, timeout)
   }
 
   it should "execute request with body" in {
@@ -85,12 +86,12 @@ class WsApiHttpClientSpec extends FlatSpec
     when(response.body).thenReturn(expectedResult.body)
 
     //when
-    val result = client.execute("POST", targetUrl, params, body, timeout).futureValue
+    val result = client.execute("POST", targetUrl, params, headers, body, timeout).futureValue
 
     //then
     result shouldBe Some(expectedResult)
 
-    assertRequest("POST", targetUrl, params, body, timeout)
+    assertRequest("POST", targetUrl, params, headers, body, timeout)
   }
 
   it should "return None if timed out when execute request" in {
@@ -101,17 +102,18 @@ class WsApiHttpClientSpec extends FlatSpec
       .when(client).execute(any[StandaloneWSRequest])
 
     //when
-    val result = client.execute("GET", targetUrl, params, None, timeout).futureValue
+    val result = client.execute("GET", targetUrl, params, headers, None, timeout).futureValue
 
     //then
     result shouldBe None
 
-    assertRequest("GET", targetUrl, params, None, timeout)
+    assertRequest("GET", targetUrl, params, headers, None, timeout)
   }
 
   private def assertRequest(method: String,
                             targetUrl: String,
                             params: List[(String, String)],
+                            headers: List[(String, String)],
                             body: Option[String],
                             timeout: FiniteDuration): Unit = {
 
@@ -125,6 +127,9 @@ class WsApiHttpClientSpec extends FlatSpec
     req.requestTimeout shouldBe Some(timeout.toMillis)
     req.queryString shouldBe params.foldLeft(Map.empty[String, Seq[String]]) {
       case (m, (k, v)) => m + (k -> (v +: m.getOrElse(k, Nil)))
+    }
+    headers.foreach { x =>
+      req.header(x._1) shouldBe Some(x._2)
     }
 
     req.contentType shouldBe body.map(_ =>"application/json")
