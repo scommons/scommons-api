@@ -12,7 +12,7 @@ object ApiAdmin {
 
   val id: String = "scommons-api-admin"
 
-  def base: File = file(id)
+  val base: File = file("admin")
 
   lazy val `scommons-api-admin`: CrossProject = crossProject.in(base)
     .settings(CommonModule.settings: _*)

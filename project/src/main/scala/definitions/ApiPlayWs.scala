@@ -8,6 +8,8 @@ object ApiPlayWs extends ApiModule {
 
   override val id: String = "scommons-api-play-ws"
 
+  override val base: File = file("play-ws")
+
   override def definition: Project = super.definition
     .settings(
       description := "Common Scala ApiHttpClient implementation using play-ws library"

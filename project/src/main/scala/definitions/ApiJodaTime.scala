@@ -11,7 +11,7 @@ object ApiJodaTime {
 
   val id: String = "scommons-api-joda-time"
 
-  def base: File = file(id)
+  val base: File = file("joda-time")
 
   lazy val `scommons-api-joda-time`: CrossProject = crossProject.in(base)
     .settings(CommonModule.settings: _*)
