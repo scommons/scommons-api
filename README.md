@@ -35,11 +35,6 @@ To build and run all the tests use the following command:
 sbt clean test
 ```
 
-### How to Run Showcase/Demo server locally
-
-Please, see the README.md in [scommons-showcase](https://github.com/scommons/scommons-showcase) project page.
-
-
 ## Documentation
 
 You can find documentation [here](https://scommons.org/scommons-api)
