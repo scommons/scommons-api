@@ -25,10 +25,13 @@ class WsApiHttpClientSpec extends FlatSpec
   with MockitoSugar
   with ScalaFutures {
 
-  implicit val defaultPatience = PatienceConfig(timeout = Span(5, Seconds), interval = Span(100, Millis))
+  implicit val defaultPatience: PatienceConfig = PatienceConfig(
+    timeout = Span(5, Seconds),
+    interval = Span(100, Millis)
+  )
 
-  private implicit val system = ActorSystem(getClass.getSimpleName)
-  private implicit val materializer = ActorMaterializer()
+  private implicit val system: ActorSystem = ActorSystem(getClass.getSimpleName)
+  private implicit val materializer: ActorMaterializer = ActorMaterializer()
 
   private val baseUrl = "http://test.api.client"
   private val response = mock[StandaloneWSResponse]
@@ -124,7 +127,7 @@ class WsApiHttpClientSpec extends FlatSpec
     req.method shouldBe method
     req.url shouldBe targetUrl
     req.followRedirects shouldBe Some(true)
-    req.requestTimeout shouldBe Some(timeout.toMillis)
+    req.requestTimeout shouldBe Some(timeout)
     req.queryString shouldBe params.foldLeft(Map.empty[String, Seq[String]]) {
       case (m, (k, v)) => m + (k -> (v +: m.getOrElse(k, Nil)))
     }
@@ -132,7 +135,7 @@ class WsApiHttpClientSpec extends FlatSpec
       req.header(x._1) shouldBe Some(x._2)
     }
 
-    req.contentType shouldBe body.map(_ =>"application/json")
+    req.contentType shouldBe body.map(_ => "application/json")
 
     body match {
       case None => req.body shouldBe EmptyBody

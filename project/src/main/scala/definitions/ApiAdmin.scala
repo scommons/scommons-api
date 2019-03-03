@@ -1,12 +1,12 @@
 package definitions
 
-import common.{Libs, TestLibs}
-import org.scalajs.sbtplugin.ScalaJSPlugin.autoImport._
-import org.scalajs.sbtplugin.cross.CrossProject
+import common.TestLibs
 import sbt.Keys._
 import sbt._
+import sbtcrossproject.CrossPlugin.autoImport._
+import sbtcrossproject.{CrossProject, JVMPlatform}
+import scalajscrossproject.ScalaJSCrossPlugin.autoImport._
 import scommons.sbtplugin.project.CommonModule
-import scoverage.ScoverageKeys._
 
 object ApiAdmin {
 
@@ -14,7 +14,7 @@ object ApiAdmin {
 
   val base: File = file("admin")
 
-  lazy val `scommons-api-admin`: CrossProject = crossProject.in(base)
+  lazy val `scommons-api-admin`: CrossProject = CrossProject(id, base)(JSPlatform, JVMPlatform)
     .settings(CommonModule.settings: _*)
     .settings(ApiModule.settings: _*)
     .dependsOn(ApiCore.`scommons-api-core`)
@@ -32,6 +32,5 @@ object ApiAdmin {
     )
 
   lazy val jvm: Project = `scommons-api-admin`.jvm
-
   lazy val js: Project = `scommons-api-admin`.js
 }

@@ -1,10 +1,11 @@
 package definitions
 
 import common.{Libs, TestLibs}
-import org.scalajs.sbtplugin.ScalaJSPlugin.autoImport._
-import org.scalajs.sbtplugin.cross.CrossProject
 import sbt.Keys._
 import sbt._
+import sbtcrossproject.CrossPlugin.autoImport._
+import sbtcrossproject.{CrossProject, JVMPlatform}
+import scalajscrossproject.ScalaJSCrossPlugin.autoImport._
 import scommons.sbtplugin.project.CommonModule
 
 object ApiJodaTime {
@@ -13,7 +14,7 @@ object ApiJodaTime {
 
   val base: File = file("joda-time")
 
-  lazy val `scommons-api-joda-time`: CrossProject = crossProject.in(base)
+  lazy val `scommons-api-joda-time`: CrossProject = CrossProject(id, base)(JSPlatform, JVMPlatform)
     .settings(CommonModule.settings: _*)
     .settings(ApiModule.settings: _*)
     .settings(
@@ -31,6 +32,5 @@ object ApiJodaTime {
     )
 
   lazy val jvm: Project = `scommons-api-joda-time`.jvm
-
   lazy val js: Project = `scommons-api-joda-time`.js
 }
