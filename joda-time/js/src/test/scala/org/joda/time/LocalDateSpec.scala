@@ -22,11 +22,11 @@ class LocalDateSpec extends FlatSpec with Matchers {
   }
 
   it should "create LocalDate with valid iso string" in {
-    def date(isoString: String): Unit = {
-      LocalDate(isoString).toString shouldBe isoString
+    def date(isoDate: String): Unit = {
+      LocalDate(isoDate).toString shouldBe isoDate
 
       //check that it can also be parsed by javascript date
-      new js.Date(isoString)
+      new js.Date(s"${isoDate}T13:43:01.234Z").toISOString() shouldBe s"${isoDate}T13:43:01.234Z"
     }
 
     //when & then

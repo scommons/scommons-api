@@ -1,6 +1,6 @@
 package scommons.api.jodatime
 
-import org.joda.time.{DateTime, LocalDate}
+import org.joda.time.{DateTime, LocalDate, LocalTime}
 import play.api.libs.json._
 
 import scala.util.Try
@@ -37,5 +37,21 @@ object JodaTimeImplicits {
   }
   implicit val dateWrites: Writes[LocalDate] = new Writes[LocalDate] {
     override def writes(o: LocalDate): JsValue = JsString(o.toString)
+  }
+  
+  implicit val timeReads: Reads[LocalTime] = new Reads[LocalTime] {
+    def reads(json: JsValue): JsResult[LocalTime] = json match {
+      case JsString(u) =>
+        Try {
+          new LocalTime(u)
+        }
+          .map(JsSuccess(_))
+          .getOrElse(JsError("error.expected.time.isoString"))
+      case _ =>
+        JsError("error.expected.jsstring")
+    }
+  }
+  implicit val timeWrites: Writes[LocalTime] = new Writes[LocalTime] {
+    override def writes(o: LocalTime): JsValue = JsString(o.toString)
   }
 }

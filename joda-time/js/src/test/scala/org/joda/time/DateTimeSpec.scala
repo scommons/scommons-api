@@ -26,7 +26,7 @@ class DateTimeSpec extends FlatSpec with Matchers {
       DateTime(isoString).toString shouldBe isoString
 
       //check that it can also be parsed by javascript date
-      new js.Date(isoString)
+      new js.Date(isoString).toISOString() should not be empty
     }
 
     //when & then
