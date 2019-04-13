@@ -8,17 +8,30 @@ env:
   - TRAVIS_SBT_VERSION="1.2.8"
   - secure: SVb4Odan6bePQ6v8BhAWYkW2JhHYiS4UojkmEZacEsobjgNAkI4qSGYjC8pcIvBUKnFPafHRG/ggtrZ8ml1beX9bXQxJsmGOutJEMuQyInPUDXdvUHABNBd/8NL8tJhZS6Ijnzbar6i78vizZNW88V9HpWwk2HZQyHw9q5mp1R0nHOG9L1474I62hnc/rclAPecWgUbiTft2mPXRohmb8aFhqAceYao+1g1LY4AuXyPiM3s4sU1YzdL/DJLWVbt8WUAmPUfiAKpGSQY98bBBxCfJrNDezIhENcY/MTo5+cGEcVtfJKu9psL5fShOPUChnnonHSb34/XWyocgN8ZrCQTfhqI1lIzB8HOc3nRiKwPfUcZ2MQ5P4fJi62rzfhEz8/r3HlvhKM+m1++wc7ocsb7+ku59xn93DWYkXKVkD2r3DnzaANd2FMFplopFSEgBJVGTKOXQSSVriMKeTpg2q13PvDhhUTIgOus4MX+n/q4XiAFLygCceRXq1mXFKi0sjWLrJkBldkg8VA1dL31RdK5ZN5K+56gSYPVhvOVeKx2URkbNDV3Y0z8rM33852VI7pdkRuGAZZFfKwVGOFlc5HcbLRln0e2oql1KtOWjyfFicT9pjHfeg2dfIrKBKMrJGavaLdh8kuX/0kKp37SdP+mJtVqJTwwoCXJol6tcl/s=
   - secure: IblLuw3rbTHi3Bozgz2h5IUaL9VfdLAdep4u95V4A/GGxR/nfXkfOuxT10c1+OrYc2+KxKDGChhlTvMd6HsHi5LUmPgfgB4MQMXs4OTsBDX3mMD4uSWbzBFyq/Z0YdbJxfQisJkseWDl7HWGuiAJyiRUdLkyEj3L9mtIqqHzsfN47V1mgAriilo+bDeLLmRrrCL9M+Y1B3fJnmcL2ptLwssZi2fcUoplmS7EjYcf0c0hYeGd3TcI6Qw31nQxRilH49Tlxp9RSWiV1IEQMBV3a7y14ttGZJ7erVXH5PxkYvSAHY54/l2LV1VoJUSO/AiiytuAMOhREpHAXoJh16dVg5kcerQnImbyflc93nU0FuPwo3jOZHtW4JaYJAUosnf1HnsSQZyfcYRuEgiTmrGTkI27ExJ6GmbVY9RyVyT20/72F7cES80Os71f3AMIIOTSfsSORVjXAxaDJCEzyez58uomO6qLJMwQKic4doac/FqIS9qd6OFWas1fEzUORpxu+z6TjwKQRld4Jr+PrNd9dARqtFpXb6MwsM9Di4jn9y9W7HKtaWfvPi1pVlPEFXVlewGM0ABWLoMnAmVdFr6bi/e85rvaUjvhL3ndm/fA1TKrY6ujKDL6PhDk+jAtH8DQ1+UcewfHRJDOtHcnUosjxep5kDQIL8ZEhAWcLAZXTZA=
+  - secure: XvCmVFa89uD66HPY58fdE3CzDh6Z5ty2hjfj1eGa6AKTLFoBm81ZVCr4hEzyadKL/XxT6l3pt2nCBgJzfm5bOYC7hVS661mgPVw6Trl0t+vMhSo6z8NLVQTcatyvMBGUR0LowSbwVENT5DDuLbb14CWAzMOuO2IIopEYZbNo3j5+/6Phs/fxYwhjsCLy/IMSFnYUeuwJO1EmIrehthtfkpH3ewH7ADYu6QLrQfFfYc46drp56i5MrkgGJWcAMvCuyczV/bv48CoS6cgKaC7uF2MaqynEwqvoI8FtctTpcx1sQpwHJJGBHMkggq09Oi1C7T/uWu6NY3NemqETHi9vaKu+fzRlRAtvSOT02CwSszLFL6AukTJjtJbF4hsZdwuqCVjfa6rQcM56Xtw1/1uFpMh8Y3CqTAwITIShk02ppi/meDKxby5DFEuD0METtoYGEu7oZxRB/PZX0H6H+HmJpmPfbbgrZvQQOiTiUC+mgS2vCsQ+Zx/TWenLK9muj7YMFCJH1/PNdrNzqT74ic07dFjv9qBbVdNiLLrfLyVAhwilrkOCda+eGxmz94sTdfUggkw2Y4sgIg0vx6eyyXsac4Axi4ATuX2qhoQlRA+GmrqUsc/Se40/GnwPnJKmys0I5FB8EpQ/Wwq3CFgJ9353jFpbB0OcVcL4JskD8Mv/W1s=
 before_install:
 - nvm install 6
 - nvm use 6
 - node --version
+- if [ $TRAVIS_PULL_REQUEST = 'false' ]; then
+    openssl aes-256-cbc -K $encrypted_76f871b6a7fb_key -iv $encrypted_76f871b6a7fb_iv -in travis/secrets.tar.enc -out travis/secrets.tar -d;
+    tar xv -C travis -f travis/secrets.tar;
+  fi
 script:
 - sbt clean coverage test coverageReport &&
   sbt coverageAggregate
 after_success:
 - sbt coveralls
-- if [ $TRAVIS_BRANCH = 'master' ] && [[ "$(<version.sbt)" =~ (.*SNAPSHOT.*) ]]; then
-    sbt clean publish;
+- if [ "$TRAVIS_PULL_REQUEST" == "false" ] && [ "$TRAVIS_BRANCH" == "master" -o "$TRAVIS_BRANCH" == "$TRAVIS_TAG" ]; then
+    if [ -z "$TRAVIS_TAG" ]; then
+       echo "Publish a snapshot";
+       sbt clean publish;
+    else
+       echo "Publish a release version=$TRAVIS_TAG";
+       version=$TRAVIS_TAG sbt clean publishSigned sonatypeRelease;
+    fi
+  else
+    echo "This is not a master branch commit. Skipping the publish/release step";
   fi
 cache:
   directories:

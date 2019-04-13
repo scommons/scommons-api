@@ -1,6 +1,7 @@
 
 [![Build Status](https://travis-ci.org/scommons/scommons-api.svg?branch=master)](https://travis-ci.org/scommons/scommons-api)
 [![Coverage Status](https://coveralls.io/repos/github/scommons/scommons-api/badge.svg?branch=master)](https://coveralls.io/github/scommons/scommons-api?branch=master)
+[![scala-index](https://index.scala-lang.org/scommons/scommons-api/scommons-api-core/latest.svg?color=orange)](https://index.scala-lang.org/scommons/scommons-api/scommons-api-core)
 [![Scala.js](https://www.scala-js.org/assets/badges/scalajs-0.6.17.svg)](https://www.scala-js.org)
 
 ## scommons-api
@@ -8,9 +9,8 @@ Common REST API Scala/Scala.js components
 
 ### How to add it to your project
 
-Current version is under active development, but you already can try it:
 ```scala
-val scommonsApiVer = "0.1.0-SNAPSHOT"
+val scommonsApiVer = "1.0.0-SNAPSHOT"
 
 libraryDependencies ++= Seq(
   // shared
@@ -54,17 +54,16 @@ object User {
 }
 ```
 
-For JS these types:
-- [DateTime](joda-time/js/src/main/scala/org/joda/time/DateTime.scala)
-- [LocalDate](joda-time/js/src/main/scala/org/joda/time/LocalDate.scala)
-- [LocalTime](joda-time/js/src/main/scala/org/joda/time/LocalTime.scala)
+For `JS` part the following types are defined as wrappers around
+the corresponding `ISO time formatted string`
+and do not contain any logic:
+- [DateTime](joda-time/js/src/main/scala/org/joda/time/DateTime.scala) => [tests](joda-time/js/src/test/scala/org/joda/time/DateTimeSpec.scala)
+- [LocalDate](joda-time/js/src/main/scala/org/joda/time/LocalDate.scala) => [tests](joda-time/js/src/test/scala/org/joda/time/LocalDateSpec.scala)
+- [LocalTime](joda-time/js/src/main/scala/org/joda/time/LocalTime.scala) => [tests](joda-time/js/src/test/scala/org/joda/time/LocalTimeSpec.scala)
 
-are defined as wrappers around the corresponding ISO time formatted string
-and do not contain any logic.
-
-Once you receive from an API on JS side an object that uses them
-you can use `toString` method to get an ISO time formatted string
-and pass it to your favorite JS time library to parse it.
+Once you receive from an API on `JS` side an object that uses them
+you can use `toString` method to get an `ISO time formatted string`
+and pass it to your favorite `JS time library` to parse it.
 
 For example, you could use standard [JS Date](https://www.w3schools.com/jS/js_date_methods.asp)
 class to parse it:
@@ -83,4 +82,4 @@ sbt test
 
 ## Documentation
 
-You can find documentation [here](https://scommons.org/scommons-api)
+You can find more documentation [here](https://scommons.org/scommons-api)
