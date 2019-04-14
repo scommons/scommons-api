@@ -1,7 +1,7 @@
 
 [![Build Status](https://travis-ci.org/scommons/scommons-api.svg?branch=master)](https://travis-ci.org/scommons/scommons-api)
 [![Coverage Status](https://coveralls.io/repos/github/scommons/scommons-api/badge.svg?branch=master)](https://coveralls.io/github/scommons/scommons-api?branch=master)
-[![scala-index](https://index.scala-lang.org/scommons/scommons-api/scommons-api-core/latest.svg?color=orange)](https://index.scala-lang.org/scommons/scommons-api/scommons-api-core)
+[![scala-index](https://index.scala-lang.org/scommons/scommons-api/scommons-api-core/latest.svg)](https://index.scala-lang.org/scommons/scommons-api/scommons-api-core)
 [![Scala.js](https://www.scala-js.org/assets/badges/scalajs-0.6.17.svg)](https://www.scala-js.org)
 
 ## scommons-api
