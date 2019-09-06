@@ -1,7 +1,7 @@
 package scommons.api.http
 
 import org.scalamock.scalatest.AsyncMockFactory
-import org.scalatest.{AsyncFlatSpec, Matchers}
+import org.scalatest.{AsyncFlatSpec, Inside, Matchers}
 import play.api.libs.json.Json.{stringify, toJson}
 import play.api.libs.json._
 import scommons.api.http.ApiHttpClient._
@@ -12,6 +12,7 @@ import scala.concurrent.duration._
 
 class ApiHttpClientSpec extends AsyncFlatSpec
   with Matchers
+  with Inside
   with AsyncMockFactory {
 
   private val baseUrl = "http://test.api.client"
@@ -143,14 +144,17 @@ class ApiHttpClientSpec extends AsyncFlatSpec
   it should "fail if timeout when parseResponse" in {
     //given
     val url = s"/some/url"
-    val client = new TestHttpClient(null)
 
     //when
-    val ex = the[Exception] thrownBy {
-      client.parseResponse[TestRespData](url, None)
+    val ex = the[ApiHttpTimeoutException] thrownBy {
+      ApiHttpClient.parseResponse[TestRespData](url, None)
     }
 
     //then
+    inside(ex) { case ApiHttpTimeoutException(resUrl) =>
+      resUrl shouldBe url
+    }
+    
     val message = ex.getMessage
     message should include("Request timed out, unable to get timely response")
     message should include(url)
@@ -162,14 +166,22 @@ class ApiHttpClientSpec extends AsyncFlatSpec
     val statusCode = 200
     val data = """{"id": 1, "missing": "name"}"""
     val response = ApiHttpResponse(statusCode, data)
-    val client = new TestHttpClient(null)
 
     //when
-    val ex = the[Exception] thrownBy {
-      client.parseResponse[TestRespData](url, Some(response))
+    val ex = the[ApiHttpStatusException] thrownBy {
+      ApiHttpClient.parseResponse[TestRespData](url, Some(response))
     }
 
     //then
+    inside(ex) { case ApiHttpStatusException(error, resUrl, status, body) =>
+      error shouldBe {
+        "Fail to parse http response, error: List((/name,List(JsonValidationError(List(error.path.missing),WrappedArray()))))"
+      }
+      resUrl shouldBe url
+      status shouldBe statusCode
+      body shouldBe data
+    }
+    
     val message = ex.getMessage
     message should include(s"url: $url")
     message should include(s"status: $statusCode")
@@ -183,14 +195,20 @@ class ApiHttpClientSpec extends AsyncFlatSpec
     val statusCode = 400
     val data = "testData"
     val response = ApiHttpResponse(statusCode, data)
-    val client = new TestHttpClient(null)
 
     //when
-    val ex = the[Exception] thrownBy {
-      client.parseResponse[List[TestRespData]](url, Some(response))
+    val ex = the[ApiHttpStatusException] thrownBy {
+      ApiHttpClient.parseResponse[List[TestRespData]](url, Some(response))
     }
 
     //then
+    inside(ex) { case ApiHttpStatusException(error, resUrl, status, body) =>
+      error shouldBe "Received error response"
+      resUrl shouldBe url
+      status shouldBe statusCode
+      body shouldBe data
+    }
+    
     val message = ex.getMessage
     message should include(s"url: $url")
     message should include(s"status: $statusCode")
@@ -201,10 +219,9 @@ class ApiHttpClientSpec extends AsyncFlatSpec
     //given
     val respData = List(TestRespData(1, "test"))
     val response = ApiHttpResponse(200, stringify(toJson(respData)))
-    val client = new TestHttpClient(null)
 
     //when
-    val result = client.parseResponse[List[TestRespData]](s"/api/url", Some(response))
+    val result = ApiHttpClient.parseResponse[List[TestRespData]](s"/api/url", Some(response))
 
     //then
     result shouldBe respData
@@ -214,10 +231,9 @@ class ApiHttpClientSpec extends AsyncFlatSpec
     //given
     val respData = TestRespData(1, "test")
     val response = ApiHttpResponse(500, stringify(toJson(respData)))
-    val client = new TestHttpClient(null)
 
     //when
-    val result = client.parseResponse[TestRespData](s"/api/url", Some(response))
+    val result = ApiHttpClient.parseResponse[TestRespData](s"/api/url", Some(response))
 
     //then
     result shouldBe respData

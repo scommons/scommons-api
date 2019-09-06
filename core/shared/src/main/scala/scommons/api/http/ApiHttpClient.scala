@@ -67,7 +67,7 @@ abstract class ApiHttpClient(baseUrl: String,
         Json.stringify(Json.toJson(d))
       },
       timeout = timeout
-    ).map(parseResponse(targetUrl, _))
+    ).map(parseResponse[R](targetUrl, _))
   }
 
   protected def execute(method: String,
@@ -77,27 +77,21 @@ abstract class ApiHttpClient(baseUrl: String,
                         jsonBody: Option[String],
                         timeout: FiniteDuration
                        ): Future[Option[ApiHttpResponse]]
+}
 
-  private[http] def parseResponse[R](url: String, response: Option[ApiHttpResponse])
-                                    (implicit jsonReads: Reads[R]): R = response match {
+object ApiHttpClient {
 
-    case None =>
-      throw new Exception(
-        s"""Request timed out, unable to get timely response for:
-           |$url""".stripMargin)
+  def parseResponse[R](url: String, response: Option[ApiHttpResponse])
+                      (implicit jsonReads: Reads[R]): R = response match {
+
+    case None => throw ApiHttpTimeoutException(url)
 
     case Some(res) if res.status <= 299 =>
       val body = res.body
       Json.parse(body).validate[R] match {
         case JsSuccess(data, _) => data
         case JsError(error) =>
-          val err =
-            s"""Error parsing http response:
-               |url: $url
-               |status: ${res.status}
-               |error: $error
-               |body: $body""".stripMargin
-          throw new Exception(err)
+          throw ApiHttpStatusException(s"Fail to parse http response, error: $error", url, res.status, body)
       }
 
     case Some(other) =>
@@ -113,17 +107,9 @@ abstract class ApiHttpClient(baseUrl: String,
 
       maybeData match {
         case Some(data) => data
-        case None =>
-          throw new Exception(
-            s"""Received error response:
-               |url: $url
-               |status: ${other.status}
-               |body: $body""".stripMargin)
+        case None => throw ApiHttpStatusException("Received error response", url, other.status, body)
       }
   }
-}
-
-object ApiHttpClient {
 
   def queryParams(params: (String, Option[_])*): List[(String, String)] = params.collect {
     case (p, Some(v)) => (p, v.toString)
