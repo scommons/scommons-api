@@ -1,18 +1,18 @@
-package scommons.api.http.js
+package scommons.api.http.dom
 
 import org.scalajs.dom
 import org.scalamock.scalatest.AsyncMockFactory
 import org.scalatest.{AsyncFlatSpec, Matchers}
 import scommons.api.http.ApiHttpResponse
-import scommons.api.http.js.JsApiHttpClient.getFullUrl
-import scommons.api.http.js.JsApiHttpClientSpec.MockXMLHttpRequest
+import scommons.api.http.dom.DomApiHttpClient.getFullUrl
+import scommons.api.http.dom.DomApiHttpClientSpec.MockXMLHttpRequest
 
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 import scala.scalajs.concurrent.JSExecutionContext
 import scala.scalajs.js.annotation.JSExportAll
 
-class JsApiHttpClientSpec extends AsyncFlatSpec
+class DomApiHttpClientSpec extends AsyncFlatSpec
   with Matchers
   with AsyncMockFactory {
 
@@ -20,11 +20,11 @@ class JsApiHttpClientSpec extends AsyncFlatSpec
 
   private val baseUrl = "http://test.api.client"
 
-  private class TestJsClient(req: MockXMLHttpRequest, resp: MockXMLHttpRequest) extends JsApiHttpClient(baseUrl) {
+  private class TestDomClient(req: MockXMLHttpRequest, resp: MockXMLHttpRequest) extends DomApiHttpClient(baseUrl) {
 
-    override private[js] def createRequest(): dom.XMLHttpRequest = req.asInstanceOf[dom.XMLHttpRequest]
+    override private[dom] def createRequest(): dom.XMLHttpRequest = req.asInstanceOf[dom.XMLHttpRequest]
 
-    override private[js] def execute(req: dom.XMLHttpRequest, body: Option[String]): Future[dom.XMLHttpRequest] = {
+    override private[dom] def execute(req: dom.XMLHttpRequest, body: Option[String]): Future[dom.XMLHttpRequest] = {
       Future.successful(resp.asInstanceOf[dom.XMLHttpRequest])
     }
   }
@@ -40,7 +40,7 @@ class JsApiHttpClientSpec extends AsyncFlatSpec
     val expectedResult = ApiHttpResponse(200, "some resp body")
     val req = stub[MockXMLHttpRequest]
     val resp = stub[MockXMLHttpRequest]
-    val client = new TestJsClient(req, resp)
+    val client = new TestDomClient(req, resp)
 
     (req.open _).when(*, *).returns(())
     (req.timeout_= _).when(*).returns(())
@@ -68,7 +68,7 @@ class JsApiHttpClientSpec extends AsyncFlatSpec
     val expectedResult = ApiHttpResponse(200, "some resp body")
     val req = stub[MockXMLHttpRequest]
     val resp = stub[MockXMLHttpRequest]
-    val client = new TestJsClient(req, resp)
+    val client = new TestDomClient(req, resp)
 
     (req.open _).when(*, *).returns(())
     (req.timeout_= _).when(*).returns(())
@@ -94,7 +94,7 @@ class JsApiHttpClientSpec extends AsyncFlatSpec
     val targetUrl = s"$baseUrl/api/get/url"
     val req = stub[MockXMLHttpRequest]
     val resp = stub[MockXMLHttpRequest]
-    val client = new TestJsClient(req, resp)
+    val client = new TestDomClient(req, resp)
 
     (req.open _).when(*, *).returns(())
     (req.timeout_= _).when(*).returns(())
@@ -129,7 +129,7 @@ class JsApiHttpClientSpec extends AsyncFlatSpec
   }
 }
 
-object JsApiHttpClientSpec {
+object DomApiHttpClientSpec {
 
   @JSExportAll
   trait MockXMLHttpRequest {

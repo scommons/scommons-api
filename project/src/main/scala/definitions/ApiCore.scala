@@ -5,9 +5,10 @@ import sbt.Keys._
 import sbt._
 import sbtcrossproject.CrossPlugin.autoImport._
 import sbtcrossproject.{CrossProject, JVMPlatform}
-import scalajscrossproject.ScalaJSCrossPlugin.autoImport._
 import scommons.sbtplugin.project.CommonModule
 import scoverage.ScoverageKeys._
+
+import scalajscrossproject.ScalaJSCrossPlugin.autoImport._
 
 object ApiCore {
 
@@ -16,6 +17,7 @@ object ApiCore {
   val base: File = file("core")
 
   lazy val `scommons-api-core`: CrossProject = CrossProject(id, base)(JSPlatform, JVMPlatform)
+    .crossType(CrossType.Pure)
     .settings(CommonModule.settings: _*)
     .settings(ApiModule.settings: _*)
     .settings(
@@ -34,11 +36,7 @@ object ApiCore {
       coverageEnabled := false,
 
       //Opt-in @ScalaJSDefined by default
-      scalacOptions += "-P:scalajs:sjsDefinedByDefault",
-
-      libraryDependencies ++= Seq(
-        Libs.scalajsDom.value
-      )
+      scalacOptions += "-P:scalajs:sjsDefinedByDefault"
     )
 
   lazy val jvm: Project = `scommons-api-core`.jvm

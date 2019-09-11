@@ -1,4 +1,4 @@
-package scommons.api.http.js
+package scommons.api.http.dom
 
 import org.scalajs.dom
 import scommons.api.http.{ApiHttpClient, ApiHttpResponse}
@@ -8,18 +8,18 @@ import scala.concurrent.{Future, Promise}
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 import scala.scalajs.js
 
-class JsApiHttpClient(baseUrl: String, defaultTimeout: FiniteDuration = 30.seconds)
+class DomApiHttpClient(baseUrl: String, defaultTimeout: FiniteDuration = 30.seconds)
   extends ApiHttpClient(baseUrl, defaultTimeout) {
 
-  protected[js] def execute(method: String,
-                            targetUrl: String,
-                            params: List[(String, String)],
-                            headers: List[(String, String)],
-                            jsonBody: Option[String],
-                            timeout: FiniteDuration): Future[Option[ApiHttpResponse]] = {
+  protected[dom] def execute(method: String,
+                             targetUrl: String,
+                             params: List[(String, String)],
+                             headers: List[(String, String)],
+                             jsonBody: Option[String],
+                             timeout: FiniteDuration): Future[Option[ApiHttpResponse]] = {
 
     val req = createRequest()
-    req.open(method, JsApiHttpClient.getFullUrl(targetUrl, params))
+    req.open(method, DomApiHttpClient.getFullUrl(targetUrl, params))
     req.timeout = timeout.toMillis.toInt
 
     val allHeaders = {
@@ -37,9 +37,9 @@ class JsApiHttpClient(baseUrl: String, defaultTimeout: FiniteDuration = 30.secon
     }
   }
 
-  private[js] def createRequest(): dom.XMLHttpRequest = new dom.XMLHttpRequest()
+  private[dom] def createRequest(): dom.XMLHttpRequest = new dom.XMLHttpRequest()
 
-  private[js] def execute(req: dom.XMLHttpRequest, body: Option[String]): Future[dom.XMLHttpRequest] = {
+  private[dom] def execute(req: dom.XMLHttpRequest, body: Option[String]): Future[dom.XMLHttpRequest] = {
     val promise = Promise[dom.XMLHttpRequest]()
 
     req.onreadystatechange = { (_: dom.Event) =>
@@ -57,9 +57,9 @@ class JsApiHttpClient(baseUrl: String, defaultTimeout: FiniteDuration = 30.secon
   }
 }
 
-object JsApiHttpClient {
+object DomApiHttpClient {
 
-  private[js] def getFullUrl(url: String, params: List[(String, String)]): String = {
+  private[dom] def getFullUrl(url: String, params: List[(String, String)]): String = {
 
     def enc(p: String) = js.URIUtils.encodeURIComponent(p)
 

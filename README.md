@@ -17,6 +17,9 @@ libraryDependencies ++= Seq(
   "org.scommons.api" %%% "scommons-api-core" % scommonsApiVer,
   "org.scommons.api" %%% "scommons-api-joda-time" % scommonsApiVer,
 
+  // client/js only
+  "org.scommons.api" %%% "scommons-api-dom" % scommonsApiVer,
+  
   // server/jvm only
   "org.scommons.api" %% "scommons-api-play-ws" % scommonsApiVer
 )
