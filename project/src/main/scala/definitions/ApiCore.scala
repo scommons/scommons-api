@@ -6,7 +6,6 @@ import sbt._
 import sbtcrossproject.CrossPlugin.autoImport._
 import sbtcrossproject.{CrossProject, JVMPlatform}
 import scommons.sbtplugin.project.CommonModule
-import scoverage.ScoverageKeys._
 
 import scalajscrossproject.ScalaJSCrossPlugin.autoImport._
 
@@ -31,10 +30,6 @@ object ApiCore {
     ).jvmSettings(
       // Add JVM-specific settings here
     ).jsSettings(
-      // disable scoverage, until the following issue is fixed:
-      //   https://github.com/scoverage/scalac-scoverage-plugin/issues/196
-      coverageEnabled := false,
-
       //Opt-in @ScalaJSDefined by default
       scalacOptions += "-P:scalajs:sjsDefinedByDefault"
     )

@@ -4,6 +4,7 @@ import common.{Libs, TestLibs}
 import org.scalajs.sbtplugin.ScalaJSPlugin
 import sbt.Keys._
 import sbt._
+import scoverage.ScoverageKeys._
 
 object ApiDom extends ApiModule {
 
@@ -16,6 +17,10 @@ object ApiDom extends ApiModule {
       .enablePlugins(ScalaJSPlugin)
       .settings(
         description := "Common Scala ApiHttpClient implementation using dom XMLHttpRequest",
+
+        // disable scoverage, until the following issue is fixed:
+        //   https://github.com/scoverage/scalac-scoverage-plugin/issues/196
+        coverageEnabled := false,
 
         //Opt-in @ScalaJSDefined by default
         scalacOptions += "-P:scalajs:sjsDefinedByDefault"
