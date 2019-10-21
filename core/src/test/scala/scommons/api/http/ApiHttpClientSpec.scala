@@ -47,7 +47,7 @@ class ApiHttpClientSpec extends AsyncFlatSpec
     //given
     val url = s"/api/get/url"
     val expectedResult = List(TestRespData(1, "test"))
-    val expectedResponse = ApiHttpResponse(200, stringify(toJson(expectedResult)))
+    val expectedResponse = ApiHttpResponse(url, 200, Map.empty, stringify(toJson(expectedResult)))
     val execute = stubExec
     val client = new TestHttpClient(execute)
 
@@ -66,7 +66,7 @@ class ApiHttpClientSpec extends AsyncFlatSpec
     //given
     val url = s"/api/get/url"
     val expectedResult = List(TestRespData(1, "test"))
-    val expectedResponse = ApiHttpResponse(200, stringify(toJson(expectedResult)))
+    val expectedResponse = ApiHttpResponse(url, 200, Map.empty, stringify(toJson(expectedResult)))
     val execute = stubExec
     val client = new TestHttpClient(execute)
 
@@ -86,7 +86,7 @@ class ApiHttpClientSpec extends AsyncFlatSpec
     val url = s"/api/post/url"
     val data = TestReqData(1)
     val expectedResult = List(TestRespData(2, "test"))
-    val expectedResponse = ApiHttpResponse(200, stringify(toJson(expectedResult)))
+    val expectedResponse = ApiHttpResponse(url, 200, Map.empty, stringify(toJson(expectedResult)))
     val execute = stubExec
     val client = new TestHttpClient(execute)
 
@@ -106,7 +106,7 @@ class ApiHttpClientSpec extends AsyncFlatSpec
     val url = s"/api/put/url"
     val data = TestReqData(1)
     val expectedResult = List(TestRespData(2, "test"))
-    val expectedResponse = ApiHttpResponse(200, stringify(toJson(expectedResult)))
+    val expectedResponse = ApiHttpResponse(url, 200, Map.empty, stringify(toJson(expectedResult)))
     val execute = stubExec
     val client = new TestHttpClient(execute)
 
@@ -126,7 +126,7 @@ class ApiHttpClientSpec extends AsyncFlatSpec
     val url = s"/api/delete/url"
     val data = TestReqData(1)
     val expectedResult = List(TestRespData(2, "test"))
-    val expectedResponse = ApiHttpResponse(200, stringify(toJson(expectedResult)))
+    val expectedResponse = ApiHttpResponse(url, 200, Map.empty, stringify(toJson(expectedResult)))
     val execute = stubExec
     val client = new TestHttpClient(execute)
 
@@ -165,7 +165,7 @@ class ApiHttpClientSpec extends AsyncFlatSpec
     val url = s"/some/url"
     val statusCode = 200
     val data = """{"id": 1, "missing": "name"}"""
-    val response = ApiHttpResponse(statusCode, data)
+    val response = ApiHttpResponse(url, statusCode, Map.empty, data)
 
     //when
     val ex = the[ApiHttpStatusException] thrownBy {
@@ -173,12 +173,13 @@ class ApiHttpClientSpec extends AsyncFlatSpec
     }
 
     //then
-    inside(ex) { case ApiHttpStatusException(error, resUrl, status, body) =>
+    inside(ex) { case ApiHttpStatusException(error, ApiHttpResponse(resUrl, status, resHeaders, body)) =>
       error shouldBe {
         "Fail to parse http response, error: List((/name,List(JsonValidationError(List(error.path.missing),WrappedArray()))))"
       }
       resUrl shouldBe url
       status shouldBe statusCode
+      resHeaders shouldBe Map.empty
       body shouldBe data
     }
     
@@ -194,7 +195,7 @@ class ApiHttpClientSpec extends AsyncFlatSpec
     val url = s"/some/url"
     val statusCode = 400
     val data = "testData"
-    val response = ApiHttpResponse(statusCode, data)
+    val response = ApiHttpResponse(url, statusCode, Map.empty, data)
 
     //when
     val ex = the[ApiHttpStatusException] thrownBy {
@@ -202,10 +203,11 @@ class ApiHttpClientSpec extends AsyncFlatSpec
     }
 
     //then
-    inside(ex) { case ApiHttpStatusException(error, resUrl, status, body) =>
+    inside(ex) { case ApiHttpStatusException(error, ApiHttpResponse(resUrl, status, resHeaders, body)) =>
       error shouldBe "Received error response"
       resUrl shouldBe url
       status shouldBe statusCode
+      resHeaders shouldBe Map.empty
       body shouldBe data
     }
     
@@ -217,11 +219,12 @@ class ApiHttpClientSpec extends AsyncFlatSpec
 
   it should "parse json for HTTP success response when parseResponse" in {
     //given
+    val url = "/api/url"
     val respData = List(TestRespData(1, "test"))
-    val response = ApiHttpResponse(200, stringify(toJson(respData)))
+    val response = ApiHttpResponse(url, 200, Map.empty, stringify(toJson(respData)))
 
     //when
-    val result = ApiHttpClient.parseResponse[List[TestRespData]](s"/api/url", Some(response))
+    val result = ApiHttpClient.parseResponse[List[TestRespData]](url, Some(response))
 
     //then
     result shouldBe respData
@@ -229,11 +232,12 @@ class ApiHttpClientSpec extends AsyncFlatSpec
 
   it should "parse json for HTTP failure json response when parseResponse" in {
     //given
+    val url = "/api/url"
     val respData = TestRespData(1, "test")
-    val response = ApiHttpResponse(500, stringify(toJson(respData)))
+    val response = ApiHttpResponse(url, 500, Map.empty, stringify(toJson(respData)))
 
     //when
-    val result = ApiHttpClient.parseResponse[TestRespData](s"/api/url", Some(response))
+    val result = ApiHttpClient.parseResponse[TestRespData](url, Some(response))
 
     //then
     result shouldBe respData

@@ -55,6 +55,10 @@ class WsApiHttpClientSpec extends FlatSpec
     reset(client, response)
   }
 
+  override protected def afterEach(): Unit = {
+    verifyNoMoreInteractions(response)
+  }
+
   override protected def afterAll(): Unit = {
     reset(client.ws)
 
@@ -67,8 +71,10 @@ class WsApiHttpClientSpec extends FlatSpec
     //given
     val targetUrl = s"$baseUrl/api/get/url"
     val body: Option[String] = None
-    val expectedResult = ApiHttpResponse(200, "some resp body")
+    val respHeaders = Map("test" -> Seq("test value"))
+    val expectedResult = ApiHttpResponse(targetUrl, 200, respHeaders, "some resp body")
     when(response.status).thenReturn(expectedResult.status)
+    when(response.headers).thenReturn(respHeaders)
     when(response.body).thenReturn(expectedResult.body)
 
     //when
@@ -78,14 +84,21 @@ class WsApiHttpClientSpec extends FlatSpec
     result shouldBe Some(expectedResult)
 
     assertRequest("GET", targetUrl, params, headers, body, timeout)
+
+    verify(response).status
+    verify(response).headers
+    verify(response).body
+    verifyNoMoreInteractions(response)
   }
 
   it should "execute request with body" in {
     //given
     val targetUrl = s"$baseUrl/api/post/url"
     val body = Some("some req data")
-    val expectedResult = ApiHttpResponse(200, "some resp body")
+    val respHeaders = Map("test" -> Seq("test value"))
+    val expectedResult = ApiHttpResponse(targetUrl, 200, respHeaders, "some resp body")
     when(response.status).thenReturn(expectedResult.status)
+    when(response.headers).thenReturn(respHeaders)
     when(response.body).thenReturn(expectedResult.body)
 
     //when
@@ -95,6 +108,11 @@ class WsApiHttpClientSpec extends FlatSpec
     result shouldBe Some(expectedResult)
 
     assertRequest("POST", targetUrl, params, headers, body, timeout)
+
+    verify(response).status
+    verify(response).headers
+    verify(response).body
+    verifyNoMoreInteractions(response)
   }
 
   it should "return None if timed out when execute request" in {
@@ -111,6 +129,8 @@ class WsApiHttpClientSpec extends FlatSpec
     result shouldBe None
 
     assertRequest("GET", targetUrl, params, headers, None, timeout)
+
+    verifyZeroInteractions(response)
   }
 
   private def assertRequest(method: String,

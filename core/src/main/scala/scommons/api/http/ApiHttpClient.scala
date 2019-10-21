@@ -91,7 +91,7 @@ object ApiHttpClient {
       Json.parse(body).validate[R] match {
         case JsSuccess(data, _) => data
         case JsError(error) =>
-          throw ApiHttpStatusException(s"Fail to parse http response, error: $error", url, res.status, body)
+          throw ApiHttpStatusException(s"Fail to parse http response, error: $error", res)
       }
 
     case Some(other) =>
@@ -107,7 +107,7 @@ object ApiHttpClient {
 
       maybeData match {
         case Some(data) => data
-        case None => throw ApiHttpStatusException("Received error response", url, other.status, body)
+        case None => throw ApiHttpStatusException("Received error response", other)
       }
   }
 

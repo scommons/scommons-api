@@ -1,6 +1,7 @@
 package scommons.api.http.dom
 
 import org.scalajs.dom
+import scommons.api.http.dom.DomApiHttpClient._
 import scommons.api.http.{ApiHttpClient, ApiHttpResponse}
 
 import scala.concurrent.duration._
@@ -19,7 +20,7 @@ class DomApiHttpClient(baseUrl: String, defaultTimeout: FiniteDuration = 30.seco
                              timeout: FiniteDuration): Future[Option[ApiHttpResponse]] = {
 
     val req = createRequest()
-    req.open(method, DomApiHttpClient.getFullUrl(targetUrl, params))
+    req.open(method, getFullUrl(targetUrl, params))
     req.timeout = timeout.toMillis.toInt
 
     val allHeaders = {
@@ -33,7 +34,12 @@ class DomApiHttpClient(baseUrl: String, defaultTimeout: FiniteDuration = 30.seco
 
     execute(req, jsonBody).map {
       case res if res.status == 0 => None //timeout
-      case res => Some(ApiHttpResponse(res.status, res.responseText))
+      case res => Some(ApiHttpResponse(
+        url = targetUrl,
+        status = res.status,
+        headers = parseResponseHeaders(res.getAllResponseHeaders()),
+        body = res.responseText
+      ))
     }
   }
 
@@ -58,6 +64,16 @@ class DomApiHttpClient(baseUrl: String, defaultTimeout: FiniteDuration = 30.seco
 }
 
 object DomApiHttpClient {
+
+  private val headersLineRegex = """[\r\n]+""".r
+  private val headersValueRegex = """: """.r
+  
+  private[dom] def parseResponseHeaders(headers: String): Map[String, Seq[String]] = {
+    headersLineRegex.split(headers.trim).map { line =>
+      val parts = headersValueRegex.pattern.split(line, 2)
+      (parts.head, parts.lastOption.toList)
+    }.toMap
+  }
 
   private[dom] def getFullUrl(url: String, params: List[(String, String)]): String = {
 

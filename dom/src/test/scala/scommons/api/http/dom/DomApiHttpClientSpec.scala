@@ -37,7 +37,7 @@ class DomApiHttpClientSpec extends AsyncFlatSpec
     //given
     val targetUrl = s"$baseUrl/api/get/url"
     val body: Option[String] = None
-    val expectedResult = ApiHttpResponse(200, "some resp body")
+    val expectedResult = ApiHttpResponse(targetUrl, 200, Map("test" -> Seq("test value")), "some resp body")
     val req = stub[MockXMLHttpRequest]
     val resp = stub[MockXMLHttpRequest]
     val client = new TestDomClient(req, resp)
@@ -46,6 +46,7 @@ class DomApiHttpClientSpec extends AsyncFlatSpec
     (req.timeout_= _).when(*).returns(())
     (req.setRequestHeader _).when(*, *).returns(())
     (resp.status _).when().returns(expectedResult.status)
+    (resp.getAllResponseHeaders _).when().returns("test: test value\r\n")
     (resp.responseText _).when().returns(expectedResult.body)
 
     //when
@@ -65,7 +66,7 @@ class DomApiHttpClientSpec extends AsyncFlatSpec
     //given
     val targetUrl = s"$baseUrl/api/post/url"
     val body = Some("some req data")
-    val expectedResult = ApiHttpResponse(200, "some resp body")
+    val expectedResult = ApiHttpResponse(targetUrl, 200, Map("test" -> Seq("test value")), "some resp body")
     val req = stub[MockXMLHttpRequest]
     val resp = stub[MockXMLHttpRequest]
     val client = new TestDomClient(req, resp)
@@ -74,6 +75,7 @@ class DomApiHttpClientSpec extends AsyncFlatSpec
     (req.timeout_= _).when(*).returns(())
     (req.setRequestHeader _).when(*, *).returns(())
     (resp.status _).when().returns(expectedResult.status)
+    (resp.getAllResponseHeaders _).when().returns("test: test value\r\n")
     (resp.responseText _).when().returns(expectedResult.body)
 
     //when
@@ -143,6 +145,8 @@ object DomApiHttpClientSpec {
     def setRequestHeader(header: String, value: String): Unit
 
     def status: Int
+
+    def getAllResponseHeaders(): String
 
     def responseText: String
   }

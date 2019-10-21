@@ -3,7 +3,7 @@ package scommons.api.http.ws
 import java.util.concurrent.TimeoutException
 
 import akka.actor.ActorSystem
-import akka.stream.ActorMaterializer
+import akka.stream.{ActorMaterializer, Materializer}
 import akka.util.ByteString
 import play.api.libs.ws.ahc.StandaloneAhcWSClient
 import play.api.libs.ws.{BodyWritable, InMemoryBody, StandaloneWSRequest, StandaloneWSResponse}
@@ -18,7 +18,7 @@ class WsApiHttpClient(baseUrl: String,
   extends ApiHttpClient(baseUrl, defaultTimeout)(system.dispatcher) {
 
   private implicit val ec: ExecutionContext = system.dispatcher
-  private implicit val materializer = ActorMaterializer()
+  private implicit val materializer: Materializer = ActorMaterializer()
 
   private[ws] val ws = StandaloneAhcWSClient()
 
@@ -45,7 +45,7 @@ class WsApiHttpClient(baseUrl: String,
       .withHttpHeaders(headers: _*)
       .withRequestTimeout(timeout)
     ).map { resp =>
-      Some(ApiHttpResponse(resp.status, resp.body))
+      Some(ApiHttpResponse(targetUrl, resp.status, resp.headers, resp.body))
     }.recover {
       case _: TimeoutException => None
     }
