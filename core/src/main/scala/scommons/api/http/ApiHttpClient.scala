@@ -2,12 +2,14 @@ package scommons.api.http
 
 import play.api.libs.json._
 import scommons.api.http.ApiHttpClient._
+import scommons.api.http.ApiHttpMethod._
 
-import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration._
+import scala.concurrent.{ExecutionContext, Future}
 
 abstract class ApiHttpClient(baseUrl: String,
-                             defaultTimeout: FiniteDuration = 30.seconds)(implicit ec: ExecutionContext) {
+                             defaultTimeout: FiniteDuration = 30.seconds
+                            )(implicit ec: ExecutionContext) {
 
   def execGet[R](url: String,
                  params: List[(String, String)] = Nil,
@@ -15,7 +17,7 @@ abstract class ApiHttpClient(baseUrl: String,
                  timeout: FiniteDuration = defaultTimeout
                 )(implicit jsonReads: Reads[R]): Future[R] = {
 
-    exec[String, R]("GET", url, params, headers, None, timeout)
+    exec[String](GET, url, params, headers, None, timeout).map(parseResponse[R])
   }
 
   def execPost[D, R](url: String,
@@ -25,7 +27,7 @@ abstract class ApiHttpClient(baseUrl: String,
                      timeout: FiniteDuration = defaultTimeout
                     )(implicit jsonWrites: Writes[D], jsonReads: Reads[R]): Future[R] = {
 
-    exec("POST", url, params, headers, Some(data), timeout)
+    exec(POST, url, params, headers, Some(data), timeout).map(parseResponse[R])
   }
 
   def execPut[D, R](url: String,
@@ -35,7 +37,7 @@ abstract class ApiHttpClient(baseUrl: String,
                     timeout: FiniteDuration = defaultTimeout
                    )(implicit jsonWrites: Writes[D], jsonReads: Reads[R]): Future[R] = {
 
-    exec("PUT", url, params, headers, Some(data), timeout)
+    exec(PUT, url, params, headers, Some(data), timeout).map(parseResponse[R])
   }
 
   def execDelete[D, R](url: String,
@@ -45,21 +47,21 @@ abstract class ApiHttpClient(baseUrl: String,
                        timeout: FiniteDuration = defaultTimeout
                       )(implicit jsonWrites: Writes[D], jsonReads: Reads[R]): Future[R] = {
 
-    exec("DELETE", url, params, headers, data, timeout)
+    exec(DELETE, url, params, headers, data, timeout).map(parseResponse[R])
   }
 
-  private def exec[T, R](method: String,
-                         url: String,
-                         params: List[(String, String)],
-                         headers: List[(String, String)],
-                         data: Option[T],
-                         timeout: FiniteDuration
-                        )(implicit jsonWrites: Writes[T], jsonReads: Reads[R]): Future[R] = {
+  private def exec[T](method: ApiHttpMethod,
+                      url: String,
+                      params: List[(String, String)],
+                      headers: List[(String, String)],
+                      data: Option[T],
+                      timeout: FiniteDuration
+                     )(implicit jsonWrites: Writes[T]): Future[ApiHttpResponse] = {
 
     val targetUrl = getTargetUrl(baseUrl, url)
 
     execute(
-      method = method,
+      method = method.toString,
       targetUrl = targetUrl,
       params = params,
       headers = headers,
@@ -67,7 +69,10 @@ abstract class ApiHttpClient(baseUrl: String,
         Json.stringify(Json.toJson(d))
       },
       timeout = timeout
-    ).map(parseResponse[R](targetUrl, _))
+    ).map {
+      case None => throw ApiHttpTimeoutException(targetUrl)
+      case Some(resp) => resp
+    }
   }
 
   protected def execute(method: String,
@@ -81,21 +86,17 @@ abstract class ApiHttpClient(baseUrl: String,
 
 object ApiHttpClient {
 
-  def parseResponse[R](url: String, response: Option[ApiHttpResponse])
-                      (implicit jsonReads: Reads[R]): R = response match {
+  def parseResponse[R](resp: ApiHttpResponse)(implicit jsonReads: Reads[R]): R = {
+    val body = resp.body
 
-    case None => throw ApiHttpTimeoutException(url)
-
-    case Some(res) if res.status <= 299 =>
-      val body = res.body
+    if (resp.status <= 299) {
       Json.parse(body).validate[R] match {
         case JsSuccess(data, _) => data
         case JsError(error) =>
-          throw ApiHttpStatusException(s"Fail to parse http response, error: $error", res)
+          throw ApiHttpStatusException(s"Fail to parse http response, error: $error", resp)
       }
-
-    case Some(other) =>
-      val body = other.body
+    }
+    else {
       val maybeData =
         if (body.trim.startsWith("{")) {
           Json.parse(body).validate[R] match {
@@ -107,8 +108,9 @@ object ApiHttpClient {
 
       maybeData match {
         case Some(data) => data
-        case None => throw ApiHttpStatusException("Received error response", other)
+        case None => throw ApiHttpStatusException("Received error response", resp)
       }
+    }
   }
 
   def queryParams(params: (String, Option[_])*): List[(String, String)] = params.collect {

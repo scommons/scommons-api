@@ -43,6 +43,27 @@ class ApiHttpClientSpec extends AsyncFlatSpec
     }
   }
 
+  it should "fail if timeout when execute request" in {
+    //given
+    val url = "/api/get/url"
+    val execute = stubExec
+    val client = new TestHttpClient(execute)
+
+    execute.when(*, *, *, *, *, *).returns(Future.successful(None))
+
+    //when
+    client.execGet[List[TestRespData]](url, params, headers).failed.map { ex =>
+      //then
+      execute.verify("GET", s"$baseUrl$url", params, headers, None, defaultTimeout)
+
+      ex shouldBe ApiHttpTimeoutException(s"$baseUrl$url")
+
+      val message = ex.getMessage
+      message should include("Request timed out, unable to get timely response")
+      message should include(url)
+    }
+  }
+
   it should "execute request and use defaultTimeout" in {
     //given
     val url = s"/api/get/url"
@@ -141,25 +162,6 @@ class ApiHttpClientSpec extends AsyncFlatSpec
     }
   }
 
-  it should "fail if timeout when parseResponse" in {
-    //given
-    val url = s"/some/url"
-
-    //when
-    val ex = the[ApiHttpTimeoutException] thrownBy {
-      ApiHttpClient.parseResponse[TestRespData](url, None)
-    }
-
-    //then
-    inside(ex) { case ApiHttpTimeoutException(resUrl) =>
-      resUrl shouldBe url
-    }
-    
-    val message = ex.getMessage
-    message should include("Request timed out, unable to get timely response")
-    message should include(url)
-  }
-
   it should "fail if invalid json when parseResponse" in {
     //given
     val url = s"/some/url"
@@ -169,7 +171,7 @@ class ApiHttpClientSpec extends AsyncFlatSpec
 
     //when
     val ex = the[ApiHttpStatusException] thrownBy {
-      ApiHttpClient.parseResponse[TestRespData](url, Some(response))
+      ApiHttpClient.parseResponse[TestRespData](response)
     }
 
     //then
@@ -199,7 +201,7 @@ class ApiHttpClientSpec extends AsyncFlatSpec
 
     //when
     val ex = the[ApiHttpStatusException] thrownBy {
-      ApiHttpClient.parseResponse[List[TestRespData]](url, Some(response))
+      ApiHttpClient.parseResponse[List[TestRespData]](response)
     }
 
     //then
@@ -224,7 +226,7 @@ class ApiHttpClientSpec extends AsyncFlatSpec
     val response = ApiHttpResponse(url, 200, Map.empty, stringify(toJson(respData)))
 
     //when
-    val result = ApiHttpClient.parseResponse[List[TestRespData]](url, Some(response))
+    val result = ApiHttpClient.parseResponse[List[TestRespData]](response)
 
     //then
     result shouldBe respData
@@ -237,7 +239,7 @@ class ApiHttpClientSpec extends AsyncFlatSpec
     val response = ApiHttpResponse(url, 500, Map.empty, stringify(toJson(respData)))
 
     //when
-    val result = ApiHttpClient.parseResponse[TestRespData](url, Some(response))
+    val result = ApiHttpClient.parseResponse[TestRespData](response)
 
     //then
     result shouldBe respData
