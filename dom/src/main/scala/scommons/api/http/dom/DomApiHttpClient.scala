@@ -1,8 +1,9 @@
 package scommons.api.http.dom
 
 import org.scalajs.dom
+import scommons.api.http.ApiHttpData._
 import scommons.api.http.dom.DomApiHttpClient._
-import scommons.api.http.{ApiHttpClient, ApiHttpResponse}
+import scommons.api.http.{ApiHttpClient, ApiHttpData, ApiHttpResponse}
 
 import scala.concurrent.duration._
 import scala.concurrent.{Future, Promise}
@@ -16,23 +17,27 @@ class DomApiHttpClient(baseUrl: String, defaultTimeout: FiniteDuration = 30.seco
                              targetUrl: String,
                              params: List[(String, String)],
                              headers: List[(String, String)],
-                             jsonBody: Option[String],
+                             data: Option[ApiHttpData],
                              timeout: FiniteDuration): Future[Option[ApiHttpResponse]] = {
 
     val req = createRequest()
     req.open(method, getFullUrl(targetUrl, params))
     req.timeout = timeout.toMillis.toInt
 
-    val allHeaders = {
-      if (jsonBody.isDefined) {
-        headers ++ Map("Content-Type" -> "application/json")
-      }
-      else headers
+    val allHeaders = data match {
+      case None => headers
+      case Some(d) => headers ++ Map("Content-Type" -> d.contentType)
     }
 
     allHeaders.foreach(x => req.setRequestHeader(x._1, x._2))
 
-    execute(req, jsonBody).map {
+    val body = data.map {
+      case StringData(d, _) => d
+      case UrlEncodedFormData(d) =>
+        d.flatMap(item => item._2.map(c => s"${item._1}=${js.URIUtils.encodeURIComponent(c)}")).mkString("&")
+    }
+
+    execute(req, body).map {
       case res if res.status == 0 => None //timeout
       case res => Some(ApiHttpResponse(
         url = targetUrl,
@@ -45,7 +50,7 @@ class DomApiHttpClient(baseUrl: String, defaultTimeout: FiniteDuration = 30.seco
 
   private[dom] def createRequest(): dom.XMLHttpRequest = new dom.XMLHttpRequest()
 
-  private[dom] def execute(req: dom.XMLHttpRequest, body: Option[String]): Future[dom.XMLHttpRequest] = {
+  private def execute(req: dom.XMLHttpRequest, body: Option[String]): Future[dom.XMLHttpRequest] = {
     val promise = Promise[dom.XMLHttpRequest]()
 
     req.onreadystatechange = { (_: dom.Event) =>

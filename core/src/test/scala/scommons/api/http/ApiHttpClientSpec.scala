@@ -6,6 +6,8 @@ import play.api.libs.json.Json.{stringify, toJson}
 import play.api.libs.json._
 import scommons.api.http.ApiHttpClient._
 import scommons.api.http.ApiHttpClientSpec._
+import scommons.api.http.ApiHttpData.{StringData, UrlEncodedFormData}
+import scommons.api.http.ApiHttpMethod.GET
 
 import scala.concurrent.Future
 import scala.concurrent.duration._
@@ -22,11 +24,11 @@ class ApiHttpClientSpec extends AsyncFlatSpec
   private val defaultTimeout = 25.seconds
 
   private type HttpExecute =
-    (String, String, List[(String, String)], List[(String, String)], Option[String], FiniteDuration) =>
+    (String, String, List[(String, String)], List[(String, String)], Option[ApiHttpData], FiniteDuration) =>
       Future[Option[ApiHttpResponse]]
 
   private def stubExec = stubFunction[
-    String, String, List[(String, String)], List[(String, String)], Option[String], FiniteDuration,
+    String, String, List[(String, String)], List[(String, String)], Option[ApiHttpData], FiniteDuration,
     Future[Option[ApiHttpResponse]]
     ]
 
@@ -35,11 +37,11 @@ class ApiHttpClientSpec extends AsyncFlatSpec
                           targetUrl: String,
                           params: List[(String, String)],
                           headers: List[(String, String)],
-                          jsonBody: Option[String],
+                          data: Option[ApiHttpData],
                           timeout: FiniteDuration
                          ): Future[Option[ApiHttpResponse]] = {
 
-      exec(method, targetUrl, params, headers, jsonBody, timeout)
+      exec(method, targetUrl, params, headers, data, timeout)
     }
   }
 
@@ -48,13 +50,14 @@ class ApiHttpClientSpec extends AsyncFlatSpec
     val url = "/api/get/url"
     val execute = stubExec
     val client = new TestHttpClient(execute)
+    val data = UrlEncodedFormData(Map("test" -> Seq("test value")))
 
     execute.when(*, *, *, *, *, *).returns(Future.successful(None))
 
     //when
-    client.execGet[List[TestRespData]](url, params, headers).failed.map { ex =>
+    client.exec(GET, url, params, headers, Some(data), defaultTimeout).failed.map { ex =>
       //then
-      execute.verify("GET", s"$baseUrl$url", params, headers, None, defaultTimeout)
+      execute.verify("GET", s"$baseUrl$url", params, headers, Some(data), defaultTimeout)
 
       ex shouldBe ApiHttpTimeoutException(s"$baseUrl$url")
 
@@ -116,7 +119,7 @@ class ApiHttpClientSpec extends AsyncFlatSpec
     //when
     client.execPost[TestReqData, List[TestRespData]](url, data, params, headers, timeout).map { result =>
       //then
-      execute.verify("POST", s"$baseUrl$url", params, headers, Some(stringify(toJson(data))), timeout)
+      execute.verify("POST", s"$baseUrl$url", params, headers, Some(StringData(stringify(toJson(data)))), timeout)
 
       result shouldBe expectedResult
     }
@@ -136,7 +139,7 @@ class ApiHttpClientSpec extends AsyncFlatSpec
     //when
     client.execPut[TestReqData, List[TestRespData]](url, data, params, headers, timeout).map { result =>
       //then
-      execute.verify("PUT", s"$baseUrl$url", params, headers, Some(stringify(toJson(data))), timeout)
+      execute.verify("PUT", s"$baseUrl$url", params, headers, Some(StringData(stringify(toJson(data)))), timeout)
 
       result shouldBe expectedResult
     }
@@ -156,7 +159,7 @@ class ApiHttpClientSpec extends AsyncFlatSpec
     //when
     client.execDelete[TestReqData, List[TestRespData]](url, Some(data), params, headers, timeout).map { result =>
       //then
-      execute.verify("DELETE", s"$baseUrl$url", params, headers, Some(stringify(toJson(data))), timeout)
+      execute.verify("DELETE", s"$baseUrl$url", params, headers, Some(StringData(stringify(toJson(data)))), timeout)
 
       result shouldBe expectedResult
     }
@@ -253,6 +256,7 @@ class ApiHttpClientSpec extends AsyncFlatSpec
 
   it should "return normalized target url when getTargetUrl" in {
     //when & then
+    getTargetUrl("", "/some/url") shouldBe "/some/url"
     getTargetUrl("http://test.com", "some/url") shouldBe "http://test.com/some/url"
     getTargetUrl("http://test.com/", "some/url") shouldBe "http://test.com/some/url"
     getTargetUrl("http://test.com", "/some/url") shouldBe "http://test.com/some/url"

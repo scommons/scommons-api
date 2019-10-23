@@ -1,5 +1,6 @@
 package scommons.api.http.ws
 
+import java.net.URLEncoder
 import java.util.concurrent.TimeoutException
 
 import akka.actor.ActorSystem
@@ -13,7 +14,8 @@ import org.scalatest.time.{Millis, Seconds, Span}
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, FlatSpec, Matchers}
 import play.api.libs.ws.ahc.StandaloneAhcWSClient
 import play.api.libs.ws.{EmptyBody, InMemoryBody, StandaloneWSRequest, StandaloneWSResponse}
-import scommons.api.http.ApiHttpResponse
+import scommons.api.http.ApiHttpData.{StringData, UrlEncodedFormData}
+import scommons.api.http.{ApiHttpData, ApiHttpResponse}
 
 import scala.concurrent.Future
 import scala.concurrent.duration._
@@ -70,8 +72,8 @@ class WsApiHttpClientSpec extends FlatSpec
   it should "execute request without body" in {
     //given
     val targetUrl = s"$baseUrl/api/get/url"
-    val body: Option[String] = None
-    val respHeaders = Map("test" -> Seq("test value"))
+    val body: Option[ApiHttpData] = None
+    val respHeaders = Map("test_header" -> Seq("test header value"))
     val expectedResult = ApiHttpResponse(targetUrl, 200, respHeaders, "some resp body")
     when(response.status).thenReturn(expectedResult.status)
     when(response.headers).thenReturn(respHeaders)
@@ -91,11 +93,62 @@ class WsApiHttpClientSpec extends FlatSpec
     verifyNoMoreInteractions(response)
   }
 
-  it should "execute request with body" in {
+  it should "execute request with plain text body" in {
     //given
     val targetUrl = s"$baseUrl/api/post/url"
-    val body = Some("some req data")
-    val respHeaders = Map("test" -> Seq("test value"))
+    val body = Some(StringData("some req data", "text/plain"))
+    val respHeaders = Map("test_header" -> Seq("test header value"))
+    val expectedResult = ApiHttpResponse(targetUrl, 200, respHeaders, "some resp body")
+    when(response.status).thenReturn(expectedResult.status)
+    when(response.headers).thenReturn(respHeaders)
+    when(response.body).thenReturn(expectedResult.body)
+
+    //when
+    val result = client.execute("POST", targetUrl, params, headers, body, timeout).futureValue
+
+    //then
+    result shouldBe Some(expectedResult)
+
+    assertRequest("POST", targetUrl, params, headers, body, timeout)
+
+    verify(response).status
+    verify(response).headers
+    verify(response).body
+    verifyNoMoreInteractions(response)
+  }
+
+  it should "execute request with json body" in {
+    //given
+    val targetUrl = s"$baseUrl/api/post/url"
+    val body = Some(StringData("""{"test": "json"}"""))
+    val respHeaders = Map("test_header" -> Seq("test header value"))
+    val expectedResult = ApiHttpResponse(targetUrl, 200, respHeaders, "some resp body")
+    when(response.status).thenReturn(expectedResult.status)
+    when(response.headers).thenReturn(respHeaders)
+    when(response.body).thenReturn(expectedResult.body)
+
+    //when
+    val result = client.execute("POST", targetUrl, params, headers, body, timeout).futureValue
+
+    //then
+    result shouldBe Some(expectedResult)
+
+    assertRequest("POST", targetUrl, params, headers, body, timeout)
+
+    verify(response).status
+    verify(response).headers
+    verify(response).body
+    verifyNoMoreInteractions(response)
+  }
+
+  it should "execute request with form body" in {
+    //given
+    val targetUrl = s"$baseUrl/api/post/url"
+    val body = Some(UrlEncodedFormData(Map(
+      "param1" -> Seq("value1", "value2"),
+      "param2" -> Seq("value3")
+    )))
+    val respHeaders = Map("test_header" -> Seq("test header value"))
     val expectedResult = ApiHttpResponse(targetUrl, 200, respHeaders, "some resp body")
     when(response.status).thenReturn(expectedResult.status)
     when(response.headers).thenReturn(respHeaders)
@@ -137,7 +190,7 @@ class WsApiHttpClientSpec extends FlatSpec
                             targetUrl: String,
                             params: List[(String, String)],
                             headers: List[(String, String)],
-                            body: Option[String],
+                            body: Option[ApiHttpData],
                             timeout: FiniteDuration): Unit = {
 
     val reqCaptor = ArgumentCaptor.forClass(classOf[StandaloneWSRequest])
@@ -155,12 +208,18 @@ class WsApiHttpClientSpec extends FlatSpec
       req.header(x._1) shouldBe Some(x._2)
     }
 
-    req.contentType shouldBe body.map(_ => "application/json")
-
     body match {
-      case None => req.body shouldBe EmptyBody
-      case Some(b) =>
+      case None =>
+        req.contentType shouldBe None
+        req.body shouldBe EmptyBody
+      case Some(StringData(b, contentType)) =>
+        req.contentType shouldBe Some(contentType)
         req.body.asInstanceOf[InMemoryBody].bytes.utf8String shouldBe b
+      case Some(UrlEncodedFormData(b)) =>
+        req.contentType shouldBe Some("application/x-www-form-urlencoded")
+        req.body.asInstanceOf[InMemoryBody].bytes.utf8String shouldBe {
+          b.flatMap(item => item._2.map(c => s"${item._1}=${URLEncoder.encode(c, "UTF-8")}")).mkString("&")
+        }
     }
   }
 }

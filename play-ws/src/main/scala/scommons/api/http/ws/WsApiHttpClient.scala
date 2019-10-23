@@ -5,9 +5,11 @@ import java.util.concurrent.TimeoutException
 import akka.actor.ActorSystem
 import akka.stream.{ActorMaterializer, Materializer}
 import akka.util.ByteString
+import play.api.libs.ws.DefaultBodyWritables._
 import play.api.libs.ws.ahc.StandaloneAhcWSClient
 import play.api.libs.ws.{BodyWritable, InMemoryBody, StandaloneWSRequest, StandaloneWSResponse}
-import scommons.api.http.{ApiHttpClient, ApiHttpResponse}
+import scommons.api.http.ApiHttpData._
+import scommons.api.http.{ApiHttpClient, ApiHttpData, ApiHttpResponse}
 
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
@@ -30,13 +32,15 @@ class WsApiHttpClient(baseUrl: String,
                             targetUrl: String,
                             params: List[(String, String)],
                             headers: List[(String, String)],
-                            jsonBody: Option[String],
+                            data: Option[ApiHttpData],
                             timeout: FiniteDuration): Future[Option[ApiHttpResponse]] = {
 
-    val req: StandaloneWSRequest = jsonBody match {
+    val req: StandaloneWSRequest = data match {
       case None => ws.url(targetUrl)
-      case Some(body) => ws.url(targetUrl)
-        .withBody(body)(WsApiHttpClient.writeableOfJsonString)
+      case Some(StringData(body, contentType)) =>
+        ws.url(targetUrl).withBody(body)(WsApiHttpClient.writeableOfString(contentType))
+      case Some(UrlEncodedFormData(body)) =>
+        ws.url(targetUrl).withBody(body)
     }
 
     execute(req.withMethod(method)
@@ -58,7 +62,7 @@ class WsApiHttpClient(baseUrl: String,
 
 object WsApiHttpClient {
 
-  private val writeableOfJsonString: BodyWritable[String] = {
-    BodyWritable(str => InMemoryBody(ByteString.fromString(str)), "application/json")
+  private def writeableOfString(contentType: String): BodyWritable[String] = {
+    BodyWritable(str => InMemoryBody(ByteString.fromString(str)), contentType)
   }
 }

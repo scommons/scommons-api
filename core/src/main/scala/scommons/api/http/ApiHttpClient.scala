@@ -1,7 +1,9 @@
 package scommons.api.http
 
+import play.api.libs.json.Json.{stringify, toJson}
 import play.api.libs.json._
 import scommons.api.http.ApiHttpClient._
+import scommons.api.http.ApiHttpData.StringData
 import scommons.api.http.ApiHttpMethod._
 
 import scala.concurrent.duration._
@@ -17,7 +19,7 @@ abstract class ApiHttpClient(baseUrl: String,
                  timeout: FiniteDuration = defaultTimeout
                 )(implicit jsonReads: Reads[R]): Future[R] = {
 
-    exec[String](GET, url, params, headers, None, timeout).map(parseResponse[R])
+    exec(GET, url, params, headers, None, timeout).map(parseResponse[R])
   }
 
   def execPost[D, R](url: String,
@@ -25,9 +27,9 @@ abstract class ApiHttpClient(baseUrl: String,
                      params: List[(String, String)] = Nil,
                      headers: List[(String, String)] = Nil,
                      timeout: FiniteDuration = defaultTimeout
-                    )(implicit jsonWrites: Writes[D], jsonReads: Reads[R]): Future[R] = {
+                    )(implicit writes: Writes[D], reads: Reads[R]): Future[R] = {
 
-    exec(POST, url, params, headers, Some(data), timeout).map(parseResponse[R])
+    exec(POST, url, params, headers, Some(StringData(stringify(toJson(data)))), timeout).map(parseResponse[R])
   }
 
   def execPut[D, R](url: String,
@@ -35,9 +37,9 @@ abstract class ApiHttpClient(baseUrl: String,
                     params: List[(String, String)] = Nil,
                     headers: List[(String, String)] = Nil,
                     timeout: FiniteDuration = defaultTimeout
-                   )(implicit jsonWrites: Writes[D], jsonReads: Reads[R]): Future[R] = {
+                   )(implicit writes: Writes[D], reads: Reads[R]): Future[R] = {
 
-    exec(PUT, url, params, headers, Some(data), timeout).map(parseResponse[R])
+    exec(PUT, url, params, headers, Some(StringData(stringify(toJson(data)))), timeout).map(parseResponse[R])
   }
 
   def execDelete[D, R](url: String,
@@ -45,18 +47,18 @@ abstract class ApiHttpClient(baseUrl: String,
                        params: List[(String, String)] = Nil,
                        headers: List[(String, String)] = Nil,
                        timeout: FiniteDuration = defaultTimeout
-                      )(implicit jsonWrites: Writes[D], jsonReads: Reads[R]): Future[R] = {
+                      )(implicit writes: Writes[D], reads: Reads[R]): Future[R] = {
 
-    exec(DELETE, url, params, headers, data, timeout).map(parseResponse[R])
+    exec(DELETE, url, params, headers, data.map(d => StringData(stringify(toJson(d)))), timeout).map(parseResponse[R])
   }
 
-  private def exec[T](method: ApiHttpMethod,
-                      url: String,
-                      params: List[(String, String)],
-                      headers: List[(String, String)],
-                      data: Option[T],
-                      timeout: FiniteDuration
-                     )(implicit jsonWrites: Writes[T]): Future[ApiHttpResponse] = {
+  def exec(method: ApiHttpMethod,
+           url: String,
+           params: List[(String, String)],
+           headers: List[(String, String)],
+           data: Option[ApiHttpData],
+           timeout: FiniteDuration
+          ): Future[ApiHttpResponse] = {
 
     val targetUrl = getTargetUrl(baseUrl, url)
 
@@ -65,9 +67,7 @@ abstract class ApiHttpClient(baseUrl: String,
       targetUrl = targetUrl,
       params = params,
       headers = headers,
-      jsonBody = data.map { d =>
-        Json.stringify(Json.toJson(d))
-      },
+      data = data,
       timeout = timeout
     ).map {
       case None => throw ApiHttpTimeoutException(targetUrl)
@@ -79,7 +79,7 @@ abstract class ApiHttpClient(baseUrl: String,
                         targetUrl: String,
                         params: List[(String, String)],
                         headers: List[(String, String)],
-                        jsonBody: Option[String],
+                        data: Option[ApiHttpData],
                         timeout: FiniteDuration
                        ): Future[Option[ApiHttpResponse]]
 }
@@ -118,13 +118,16 @@ object ApiHttpClient {
   }.toList
 
   private[http] def getTargetUrl(baseUrl: String, url: String): String = {
-    val normalizedUrl =
-      if (url.startsWith("/")) url.substring(1)
-      else url
-
-    if (baseUrl.endsWith("/"))
-      s"$baseUrl$normalizedUrl"
-    else
-      s"$baseUrl/$normalizedUrl"
+    if (baseUrl.isEmpty) url
+    else {
+      val normalizedUrl =
+        if (url.startsWith("/")) url.substring(1)
+        else url
+      
+      if (baseUrl.endsWith("/"))
+        s"$baseUrl$normalizedUrl"
+      else
+        s"$baseUrl/$normalizedUrl"
+    }
   }
 }
