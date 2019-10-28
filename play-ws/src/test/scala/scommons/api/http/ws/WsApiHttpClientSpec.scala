@@ -17,7 +17,7 @@ import play.api.libs.ws.{EmptyBody, InMemoryBody, StandaloneWSRequest, Standalon
 import scommons.api.http.ApiHttpData.{StringData, UrlEncodedFormData}
 import scommons.api.http.{ApiHttpData, ApiHttpResponse}
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration._
 
 class WsApiHttpClientSpec extends FlatSpec
@@ -33,14 +33,14 @@ class WsApiHttpClientSpec extends FlatSpec
   )
 
   private implicit val system: ActorSystem = ActorSystem(getClass.getSimpleName)
+  private implicit val ec: ExecutionContext = system.dispatcher
   private implicit val materializer: ActorMaterializer = ActorMaterializer()
 
   private val baseUrl = "http://test.api.client"
   private val response = mock[StandaloneWSResponse]
+  private val wsClient = StandaloneAhcWSClient()
 
-  private class TestWsClient extends WsApiHttpClient(baseUrl) {
-
-    override private[ws] val ws = spy(StandaloneAhcWSClient())
+  private class TestWsClient extends WsApiHttpClient(wsClient, baseUrl) {
 
     override private[ws] def execute(req: StandaloneWSRequest): Future[StandaloneWSResponse] = {
       Future.successful(response)
@@ -62,11 +62,8 @@ class WsApiHttpClientSpec extends FlatSpec
   }
 
   override protected def afterAll(): Unit = {
-    reset(client.ws)
-
+    wsClient.close()
     system.terminate().futureValue
-
-    verify(client.ws).close()
   }
 
   it should "execute request without body" in {
