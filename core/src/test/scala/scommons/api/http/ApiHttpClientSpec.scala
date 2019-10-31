@@ -55,7 +55,7 @@ class ApiHttpClientSpec extends AsyncFlatSpec
     execute.when(*, *, *, *, *, *).returns(Future.successful(None))
 
     //when
-    client.exec(GET, url, params, headers, Some(data), defaultTimeout).failed.map { ex =>
+    client.exec(GET, url, Some(data), params, headers).failed.map { ex =>
       //then
       execute.verify("GET", s"$baseUrl$url", params, headers, Some(data), defaultTimeout)
 

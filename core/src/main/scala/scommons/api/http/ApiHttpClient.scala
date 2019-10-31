@@ -19,7 +19,7 @@ abstract class ApiHttpClient(baseUrl: String,
                  timeout: FiniteDuration = defaultTimeout
                 )(implicit jsonReads: Reads[R]): Future[R] = {
 
-    exec(GET, url, params, headers, None, timeout).map(parseResponse[R])
+    exec(GET, url, None, params, headers, timeout).map(parseResponse[R])
   }
 
   def execPost[D, R](url: String,
@@ -29,7 +29,7 @@ abstract class ApiHttpClient(baseUrl: String,
                      timeout: FiniteDuration = defaultTimeout
                     )(implicit writes: Writes[D], reads: Reads[R]): Future[R] = {
 
-    exec(POST, url, params, headers, Some(StringData(stringify(toJson(data)))), timeout).map(parseResponse[R])
+    exec(POST, url, Some(StringData(stringify(toJson(data)))), params, headers, timeout).map(parseResponse[R])
   }
 
   def execPut[D, R](url: String,
@@ -39,7 +39,7 @@ abstract class ApiHttpClient(baseUrl: String,
                     timeout: FiniteDuration = defaultTimeout
                    )(implicit writes: Writes[D], reads: Reads[R]): Future[R] = {
 
-    exec(PUT, url, params, headers, Some(StringData(stringify(toJson(data)))), timeout).map(parseResponse[R])
+    exec(PUT, url, Some(StringData(stringify(toJson(data)))), params, headers, timeout).map(parseResponse[R])
   }
 
   def execDelete[D, R](url: String,
@@ -49,15 +49,15 @@ abstract class ApiHttpClient(baseUrl: String,
                        timeout: FiniteDuration = defaultTimeout
                       )(implicit writes: Writes[D], reads: Reads[R]): Future[R] = {
 
-    exec(DELETE, url, params, headers, data.map(d => StringData(stringify(toJson(d)))), timeout).map(parseResponse[R])
+    exec(DELETE, url, data.map(d => StringData(stringify(toJson(d)))), params, headers, timeout).map(parseResponse[R])
   }
 
   def exec(method: ApiHttpMethod,
            url: String,
-           params: List[(String, String)],
-           headers: List[(String, String)],
            data: Option[ApiHttpData],
-           timeout: FiniteDuration
+           params: List[(String, String)] = Nil,
+           headers: List[(String, String)] = Nil,
+           timeout: FiniteDuration = defaultTimeout
           ): Future[ApiHttpResponse] = {
 
     val targetUrl = getTargetUrl(baseUrl, url)
