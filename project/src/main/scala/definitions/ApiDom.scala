@@ -1,6 +1,6 @@
 package definitions
 
-import common.{Libs, TestLibs}
+import common.TestLibs
 import org.scalajs.sbtplugin.ScalaJSPlugin
 import sbt.Keys._
 import sbt._
@@ -16,11 +16,12 @@ object ApiDom extends ApiModule {
     super.definition
       .enablePlugins(ScalaJSPlugin)
       .settings(
-        description := "Common Scala ApiHttpClient implementation using dom XMLHttpRequest",
+        description := "Common Scala ApiHttpClient implementation using JavaScript XMLHttpRequest",
 
         // disable scoverage, until the following issue is fixed:
         //   https://github.com/scoverage/scalac-scoverage-plugin/issues/196
         coverageEnabled := false,
+        coverageExcludedPackages := "scommons.api.http.dom.raw",
 
         //Opt-in @ScalaJSDefined by default
         scalacOptions += "-P:scalajs:sjsDefinedByDefault"
@@ -31,9 +32,7 @@ object ApiDom extends ApiModule {
     ApiCore.js
   )
 
-  override val runtimeDependencies: Def.Initialize[Seq[ModuleID]] = Def.setting(Seq(
-    Libs.scalajsDom.value
-  ))
+  override val runtimeDependencies: Def.Initialize[Seq[ModuleID]] = Def.setting(Nil)
 
   override val testDependencies: Def.Initialize[Seq[ModuleID]] = Def.setting(Seq(
     TestLibs.scalaTestJs.value,

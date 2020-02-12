@@ -1,6 +1,5 @@
 package scommons.api.http.dom
 
-import org.scalajs.dom
 import scommons.api.http.ApiHttpData._
 import scommons.api.http.dom.DomApiHttpClient._
 import scommons.api.http.{ApiHttpClient, ApiHttpData, ApiHttpResponse}
@@ -48,12 +47,12 @@ class DomApiHttpClient(baseUrl: String, defaultTimeout: FiniteDuration = 30.seco
     }
   }
 
-  private[dom] def createRequest(): dom.XMLHttpRequest = new dom.XMLHttpRequest()
+  private[dom] def createRequest(): raw.XMLHttpRequest = new raw.XMLHttpRequest()
 
-  private def execute(req: dom.XMLHttpRequest, body: Option[String]): Future[dom.XMLHttpRequest] = {
-    val promise = Promise[dom.XMLHttpRequest]()
+  private def execute(req: raw.XMLHttpRequest, body: Option[String]): Future[raw.XMLHttpRequest] = {
+    val promise = Promise[raw.XMLHttpRequest]()
 
-    req.onreadystatechange = { (_: dom.Event) =>
+    req.onreadystatechange = { (_: js.Object) =>
       if (req.readyState == 4) {
         promise.success(req)
       }

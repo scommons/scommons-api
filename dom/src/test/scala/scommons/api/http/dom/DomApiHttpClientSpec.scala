@@ -1,7 +1,5 @@
 package scommons.api.http.dom
 
-import org.scalajs.dom
-import org.scalajs.dom.raw.Event
 import org.scalamock.scalatest.AsyncMockFactory
 import org.scalatest.{AsyncFlatSpec, Matchers}
 import scommons.api.http.ApiHttpData.{StringData, UrlEncodedFormData}
@@ -25,7 +23,7 @@ class DomApiHttpClientSpec extends AsyncFlatSpec
 
   private class TestDomClient(req: MockXMLHttpRequest) extends DomApiHttpClient(baseUrl) {
 
-    override private[dom] def createRequest(): dom.XMLHttpRequest = req.asInstanceOf[dom.XMLHttpRequest]
+    override private[dom] def createRequest(): raw.XMLHttpRequest = req.asInstanceOf[raw.XMLHttpRequest]
   }
 
   private val params = List("p1" -> "1", "p2" -> "2")
@@ -44,7 +42,7 @@ class DomApiHttpClientSpec extends AsyncFlatSpec
     (req.open _).when(*, *).returns(())
     (req.timeout_= _).when(*).returns(())
     (req.setRequestHeader _).when(*, *).returns(())
-    (req.onreadystatechange_= _).when(*).onCall { value: js.Function1[Event, _] =>
+    (req.onreadystatechange_= _).when(*).onCall { value: js.Function1[js.Object, _] =>
       value(null)
       ()
     }
@@ -81,7 +79,7 @@ class DomApiHttpClientSpec extends AsyncFlatSpec
     (req.open _).when(*, *).returns(())
     (req.timeout_= _).when(*).returns(())
     (req.setRequestHeader _).when(*, *).returns(())
-    (req.onreadystatechange_= _).when(*).onCall { value: js.Function1[Event, _] =>
+    (req.onreadystatechange_= _).when(*).onCall { value: js.Function1[js.Object, _] =>
       value(null)
       ()
     }
@@ -118,7 +116,7 @@ class DomApiHttpClientSpec extends AsyncFlatSpec
     (req.open _).when(*, *).returns(())
     (req.timeout_= _).when(*).returns(())
     (req.setRequestHeader _).when(*, *).returns(())
-    (req.onreadystatechange_= _).when(*).onCall { value: js.Function1[Event, _] =>
+    (req.onreadystatechange_= _).when(*).onCall { value: js.Function1[js.Object, _] =>
       value(null)
       ()
     }
@@ -157,7 +155,7 @@ class DomApiHttpClientSpec extends AsyncFlatSpec
     (req.open _).when(*, *).returns(())
     (req.timeout_= _).when(*).returns(())
     (req.setRequestHeader _).when(*, *).returns(())
-    (req.onreadystatechange_= _).when(*).onCall { value: js.Function1[Event, _] =>
+    (req.onreadystatechange_= _).when(*).onCall { value: js.Function1[js.Object, _] =>
       value(null)
       ()
     }
@@ -190,7 +188,7 @@ class DomApiHttpClientSpec extends AsyncFlatSpec
     (req.open _).when(*, *).returns(())
     (req.timeout_= _).when(*).returns(())
     (req.setRequestHeader _).when(*, *).returns(())
-    (req.onreadystatechange_= _).when(*).onCall { value: js.Function1[Event, _] =>
+    (req.onreadystatechange_= _).when(*).onCall { value: js.Function1[js.Object, _] =>
       value(null)
       ()
     }
@@ -236,7 +234,7 @@ object DomApiHttpClientSpec {
 
     def timeout_= (value: Double): Unit
     
-    def onreadystatechange_= (value: js.Function1[Event, _]): Unit
+    def onreadystatechange_= (value: js.Function1[js.Object, _]): Unit
 
     def readyState: Int
 
