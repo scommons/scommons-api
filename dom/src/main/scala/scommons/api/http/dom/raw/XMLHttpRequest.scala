@@ -72,4 +72,13 @@ class XMLHttpRequest extends js.Object {
     * MDN
     */
   def responseText: String = js.native
+
+  /**
+    * The response entity body according to responseType, as an ArrayBuffer, Blob,
+    * Document, JavaScript object (for "json"), or string. This is null if the request is
+    * not complete or was not successful.
+    *
+    * MDN
+    */
+  def response: js.Any = js.native
 }

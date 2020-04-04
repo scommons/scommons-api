@@ -178,14 +178,11 @@ class ApiHttpClientSpec extends AsyncFlatSpec
     }
 
     //then
-    inside(ex) { case ApiHttpStatusException(error, ApiHttpResponse(resUrl, status, resHeaders, body)) =>
+    inside(ex) { case ApiHttpStatusException(error, resp) =>
       error shouldBe {
         "Fail to parse http response, error: List((/name,List(JsonValidationError(List(error.path.missing),WrappedArray()))))"
       }
-      resUrl shouldBe url
-      status shouldBe statusCode
-      resHeaders shouldBe Map.empty
-      body shouldBe data
+      resp shouldBe response
     }
     
     val message = ex.getMessage
@@ -208,12 +205,9 @@ class ApiHttpClientSpec extends AsyncFlatSpec
     }
 
     //then
-    inside(ex) { case ApiHttpStatusException(error, ApiHttpResponse(resUrl, status, resHeaders, body)) =>
+    inside(ex) { case ApiHttpStatusException(error, resp) =>
       error shouldBe "Received error response"
-      resUrl shouldBe url
-      status shouldBe statusCode
-      resHeaders shouldBe Map.empty
-      body shouldBe data
+      resp shouldBe response
     }
     
     val message = ex.getMessage

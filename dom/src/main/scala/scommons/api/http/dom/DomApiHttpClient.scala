@@ -8,6 +8,7 @@ import scala.concurrent.duration._
 import scala.concurrent.{Future, Promise}
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 import scala.scalajs.js
+import scala.scalajs.js.typedarray._
 
 class DomApiHttpClient(baseUrl: String, defaultTimeout: FiniteDuration = 30.seconds)
   extends ApiHttpClient(baseUrl, defaultTimeout) {
@@ -38,11 +39,12 @@ class DomApiHttpClient(baseUrl: String, defaultTimeout: FiniteDuration = 30.seco
 
     execute(req, body).map {
       case res if res.status == 0 => None //timeout
-      case res => Some(ApiHttpResponse(
-        url = targetUrl,
-        status = res.status,
-        headers = parseResponseHeaders(res.getAllResponseHeaders()),
-        body = res.responseText
+      case res => Some(new ApiHttpResponse(
+        targetUrl,
+        res.status,
+        parseResponseHeaders(res.getAllResponseHeaders()),
+        res.responseText,
+        getBodyAsBytes(res.response)
       ))
     }
   }
@@ -72,13 +74,21 @@ object DomApiHttpClient {
   private val headersLineRegex = """[\r\n]+""".r
   private val headersValueRegex = """: """.r
   
-  private[dom] def parseResponseHeaders(headers: String): Map[String, Seq[String]] = {
+  private def parseResponseHeaders(headers: String): Map[String, Seq[String]] = {
     headersLineRegex.split(headers.trim).map { line =>
       val parts = headersValueRegex.pattern.split(line, 2)
       (parts.head, parts.lastOption.toList)
     }.toMap
   }
 
+  private[dom] def getBodyAsBytes(response: js.Any): Seq[Byte] = {
+    if (response == null || js.isUndefined(response)) Nil
+    else {
+      //TODO: handle Blob response as well
+      new Int8Array(response.asInstanceOf[ArrayBuffer]).toArray
+    }
+  }
+  
   private[dom] def getFullUrl(url: String, params: List[(String, String)]): String = {
 
     def enc(p: String) = js.URIUtils.encodeURIComponent(p)

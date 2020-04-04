@@ -38,7 +38,7 @@ class WsApiHttpClient(ws: StandaloneAhcWSClient,
       .withHttpHeaders(headers: _*)
       .withRequestTimeout(timeout)
     ).map { resp =>
-      Some(ApiHttpResponse(targetUrl, resp.status, resp.headers, resp.body))
+      Some(new ApiHttpResponse(targetUrl, resp.status, resp.headers, resp.body, resp.bodyAsBytes))
     }.recover {
       case _: TimeoutException => None
     }

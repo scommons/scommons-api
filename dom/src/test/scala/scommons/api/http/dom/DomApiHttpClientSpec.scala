@@ -1,9 +1,9 @@
 package scommons.api.http.dom
 
 import org.scalamock.scalatest.AsyncMockFactory
-import org.scalatest.{AsyncFlatSpec, Matchers}
+import org.scalatest.{Assertion, AsyncFlatSpec, Inside, Matchers}
 import scommons.api.http.ApiHttpData.{StringData, UrlEncodedFormData}
-import scommons.api.http.dom.DomApiHttpClient.getFullUrl
+import scommons.api.http.dom.DomApiHttpClient._
 import scommons.api.http.dom.DomApiHttpClientSpec.MockXMLHttpRequest
 import scommons.api.http.{ApiHttpData, ApiHttpResponse}
 
@@ -12,9 +12,11 @@ import scala.concurrent.duration._
 import scala.scalajs.concurrent.JSExecutionContext
 import scala.scalajs.js
 import scala.scalajs.js.annotation.JSExportAll
+import scala.scalajs.js.typedarray._
 
 class DomApiHttpClientSpec extends AsyncFlatSpec
   with Matchers
+  with Inside
   with AsyncMockFactory {
 
   implicit override def executionContext: ExecutionContext = JSExecutionContext.queue
@@ -51,9 +53,10 @@ class DomApiHttpClientSpec extends AsyncFlatSpec
     (req.status _).when().returns(expectedResult.status)
     (req.getAllResponseHeaders _).when().returns("test_header: test header value\r\n")
     (req.responseText _).when().returns(expectedResult.body)
+    (req.response _).when().returns(expectedResult.bodyAsBytes.toArray.toTypedArray.buffer)
 
     //when
-    client.execute("GET", targetUrl, params, headers, body, timeout).map { result =>
+    client.execute("GET", targetUrl, params, headers, body, timeout).map(inside(_) { case Some(result) =>
       //then
       (req.open _).verify("GET", getFullUrl(targetUrl, params))
       (req.timeout_= _).verify(timeout.toMillis)
@@ -62,8 +65,8 @@ class DomApiHttpClientSpec extends AsyncFlatSpec
       }
       (req.send _).verify(().asInstanceOf[js.Any])
 
-      result shouldBe Some(expectedResult)
-    }
+      assertApiHttpResponse(result, expectedResult)
+    })
   }
 
   it should "execute request with plain text body" in {
@@ -88,9 +91,10 @@ class DomApiHttpClientSpec extends AsyncFlatSpec
     (req.status _).when().returns(expectedResult.status)
     (req.getAllResponseHeaders _).when().returns("test_header: test header value\r\n")
     (req.responseText _).when().returns(expectedResult.body)
+    (req.response _).when().returns(expectedResult.bodyAsBytes.toArray.toTypedArray.buffer)
 
     //when
-    client.execute("POST", targetUrl, params, headers, body, timeout).map { result =>
+    client.execute("POST", targetUrl, params, headers, body, timeout).map(inside(_) { case Some(result) =>
       //then
       (req.open _).verify("POST", getFullUrl(targetUrl, params))
       (req.timeout_= _).verify(timeout.toMillis)
@@ -99,8 +103,8 @@ class DomApiHttpClientSpec extends AsyncFlatSpec
       }
       (req.send _).verify(data.asInstanceOf[js.Any])
 
-      result shouldBe Some(expectedResult)
-    }
+      assertApiHttpResponse(result, expectedResult)
+    })
   }
 
   it should "execute request with json body" in {
@@ -125,9 +129,10 @@ class DomApiHttpClientSpec extends AsyncFlatSpec
     (req.status _).when().returns(expectedResult.status)
     (req.getAllResponseHeaders _).when().returns("test_header: test header value\r\n")
     (req.responseText _).when().returns(expectedResult.body)
+    (req.response _).when().returns(expectedResult.bodyAsBytes.toArray.toTypedArray.buffer)
 
     //when
-    client.execute("POST", targetUrl, params, headers, body, timeout).map { result =>
+    client.execute("POST", targetUrl, params, headers, body, timeout).map(inside(_) { case Some(result) =>
       //then
       (req.open _).verify("POST", getFullUrl(targetUrl, params))
       (req.timeout_= _).verify(timeout.toMillis)
@@ -136,8 +141,8 @@ class DomApiHttpClientSpec extends AsyncFlatSpec
       }
       (req.send _).verify(data.asInstanceOf[js.Any])
 
-      result shouldBe Some(expectedResult)
-    }
+      assertApiHttpResponse(result, expectedResult)
+    })
   }
 
   it should "execute request with form body" in {
@@ -164,9 +169,10 @@ class DomApiHttpClientSpec extends AsyncFlatSpec
     (req.status _).when().returns(expectedResult.status)
     (req.getAllResponseHeaders _).when().returns("test_header: test header value\r\n")
     (req.responseText _).when().returns(expectedResult.body)
+    (req.response _).when().returns(expectedResult.bodyAsBytes.toArray.toTypedArray.buffer)
 
     //when
-    client.execute("POST", targetUrl, params, headers, body, timeout).map { result =>
+    client.execute("POST", targetUrl, params, headers, body, timeout).map(inside(_) { case Some(result) =>
       //then
       (req.open _).verify("POST", getFullUrl(targetUrl, params))
       (req.timeout_= _).verify(timeout.toMillis)
@@ -175,8 +181,8 @@ class DomApiHttpClientSpec extends AsyncFlatSpec
       }
       (req.send _).verify("param1=value1&param1=value2&param2=value3".asInstanceOf[js.Any])
 
-      result shouldBe Some(expectedResult)
-    }
+      assertApiHttpResponse(result, expectedResult)
+    })
   }
 
   it should "return None if timed out when execute request" in {
@@ -223,6 +229,28 @@ class DomApiHttpClientSpec extends AsyncFlatSpec
     getFullUrl("/test", List("p1" -> "1", "p2" -> "1 2")) shouldBe "/test?p1=1&p2=1%202"
     getFullUrl("/test", List("p1" -> "1", "p2" -> "1&2")) shouldBe "/test?p1=1&p2=1%262"
   }
+
+  it should "return Nil if response is null or undefined when getBodyAsBytes" in {
+    //when & then
+    getBodyAsBytes(null) shouldBe Nil
+    getBodyAsBytes(js.undefined) shouldBe Nil
+  }
+
+  it should "return bytes if response is ArrayBuffer when getBodyAsBytes" in {
+    //given
+    val response: ArrayBuffer = "test data".getBytes.toTypedArray.buffer
+    
+    //when & then
+    getBodyAsBytes(response) shouldBe "test data".getBytes
+  }
+
+  private def assertApiHttpResponse(result: ApiHttpResponse, expected: ApiHttpResponse): Assertion = {
+    result.url shouldBe expected.url
+    result.status shouldBe expected.status
+    result.headers shouldBe expected.headers
+    result.body shouldBe expected.body
+    result.bodyAsBytes shouldBe expected.bodyAsBytes
+  }
 }
 
 object DomApiHttpClientSpec {
@@ -247,5 +275,7 @@ object DomApiHttpClientSpec {
     def getAllResponseHeaders(): String
 
     def responseText: String
+
+    def response: js.Any
   }
 }

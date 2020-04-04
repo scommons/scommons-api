@@ -5,6 +5,7 @@ import java.util.concurrent.TimeoutException
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
+import akka.util.ByteString
 import org.mockito.ArgumentCaptor
 import org.mockito.Matchers.any
 import org.mockito.Mockito._
@@ -75,18 +76,20 @@ class WsApiHttpClientSpec extends FlatSpec
     when(response.status).thenReturn(expectedResult.status)
     when(response.headers).thenReturn(respHeaders)
     when(response.body).thenReturn(expectedResult.body)
+    when(response.bodyAsBytes).thenReturn(ByteString.apply(expectedResult.body))
 
     //when
-    val result = client.execute("GET", targetUrl, params, headers, body, timeout).futureValue
+    val Some(result) = client.execute("GET", targetUrl, params, headers, body, timeout).futureValue
 
     //then
-    result shouldBe Some(expectedResult)
+    assertApiHttpResponse(result, expectedResult)
 
     assertRequest("GET", targetUrl, params, headers, body, timeout)
 
     verify(response).status
     verify(response).headers
     verify(response).body
+    verify(response).bodyAsBytes
     verifyNoMoreInteractions(response)
   }
 
@@ -99,18 +102,20 @@ class WsApiHttpClientSpec extends FlatSpec
     when(response.status).thenReturn(expectedResult.status)
     when(response.headers).thenReturn(respHeaders)
     when(response.body).thenReturn(expectedResult.body)
+    when(response.bodyAsBytes).thenReturn(ByteString.apply(expectedResult.body))
 
     //when
-    val result = client.execute("POST", targetUrl, params, headers, body, timeout).futureValue
+    val Some(result) = client.execute("POST", targetUrl, params, headers, body, timeout).futureValue
 
     //then
-    result shouldBe Some(expectedResult)
+    assertApiHttpResponse(result, expectedResult)
 
     assertRequest("POST", targetUrl, params, headers, body, timeout)
 
     verify(response).status
     verify(response).headers
     verify(response).body
+    verify(response).bodyAsBytes
     verifyNoMoreInteractions(response)
   }
 
@@ -123,18 +128,20 @@ class WsApiHttpClientSpec extends FlatSpec
     when(response.status).thenReturn(expectedResult.status)
     when(response.headers).thenReturn(respHeaders)
     when(response.body).thenReturn(expectedResult.body)
+    when(response.bodyAsBytes).thenReturn(ByteString.apply(expectedResult.body))
 
     //when
-    val result = client.execute("POST", targetUrl, params, headers, body, timeout).futureValue
+    val Some(result) = client.execute("POST", targetUrl, params, headers, body, timeout).futureValue
 
     //then
-    result shouldBe Some(expectedResult)
+    assertApiHttpResponse(result, expectedResult)
 
     assertRequest("POST", targetUrl, params, headers, body, timeout)
 
     verify(response).status
     verify(response).headers
     verify(response).body
+    verify(response).bodyAsBytes
     verifyNoMoreInteractions(response)
   }
 
@@ -150,18 +157,20 @@ class WsApiHttpClientSpec extends FlatSpec
     when(response.status).thenReturn(expectedResult.status)
     when(response.headers).thenReturn(respHeaders)
     when(response.body).thenReturn(expectedResult.body)
+    when(response.bodyAsBytes).thenReturn(ByteString.apply(expectedResult.body))
 
     //when
-    val result = client.execute("POST", targetUrl, params, headers, body, timeout).futureValue
+    val Some(result) = client.execute("POST", targetUrl, params, headers, body, timeout).futureValue
 
     //then
-    result shouldBe Some(expectedResult)
+    assertApiHttpResponse(result, expectedResult)
 
     assertRequest("POST", targetUrl, params, headers, body, timeout)
 
     verify(response).status
     verify(response).headers
     verify(response).body
+    verify(response).bodyAsBytes
     verifyNoMoreInteractions(response)
   }
 
@@ -181,6 +190,14 @@ class WsApiHttpClientSpec extends FlatSpec
     assertRequest("GET", targetUrl, params, headers, None, timeout)
 
     verifyZeroInteractions(response)
+  }
+  
+  private def assertApiHttpResponse(result: ApiHttpResponse, expected: ApiHttpResponse): Unit = {
+    result.url shouldBe expected.url
+    result.status shouldBe expected.status
+    result.headers shouldBe expected.headers
+    result.body shouldBe expected.body
+    result.bodyAsBytes shouldBe expected.bodyAsBytes
   }
 
   private def assertRequest(method: String,
