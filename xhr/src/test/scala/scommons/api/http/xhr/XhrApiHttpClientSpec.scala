@@ -1,10 +1,10 @@
-package scommons.api.http.dom
+package scommons.api.http.xhr
 
 import org.scalamock.scalatest.AsyncMockFactory
 import org.scalatest.{Assertion, AsyncFlatSpec, Inside, Matchers}
 import scommons.api.http.ApiHttpData.{StringData, UrlEncodedFormData}
-import scommons.api.http.dom.DomApiHttpClient._
-import scommons.api.http.dom.DomApiHttpClientSpec.MockXMLHttpRequest
+import scommons.api.http.xhr.XhrApiHttpClient._
+import scommons.api.http.xhr.XhrApiHttpClientSpec.MockXMLHttpRequest
 import scommons.api.http.{ApiHttpData, ApiHttpResponse}
 
 import scala.concurrent.ExecutionContext
@@ -14,7 +14,7 @@ import scala.scalajs.js
 import scala.scalajs.js.annotation.JSExportAll
 import scala.scalajs.js.typedarray._
 
-class DomApiHttpClientSpec extends AsyncFlatSpec
+class XhrApiHttpClientSpec extends AsyncFlatSpec
   with Matchers
   with Inside
   with AsyncMockFactory {
@@ -23,9 +23,9 @@ class DomApiHttpClientSpec extends AsyncFlatSpec
 
   private val baseUrl = "http://test.api.client"
 
-  private class TestDomClient(req: MockXMLHttpRequest) extends DomApiHttpClient(baseUrl) {
+  private class TestXhrClient(req: MockXMLHttpRequest) extends XhrApiHttpClient(baseUrl) {
 
-    override private[dom] def createRequest(): raw.XMLHttpRequest = req.asInstanceOf[raw.XMLHttpRequest]
+    override private[xhr] def createRequest(): raw.XMLHttpRequest = req.asInstanceOf[raw.XMLHttpRequest]
   }
 
   private val params = List("p1" -> "1", "p2" -> "2")
@@ -39,7 +39,7 @@ class DomApiHttpClientSpec extends AsyncFlatSpec
     val respHeaders = Map("test_header" -> Seq("test header value"))
     val expectedResult = ApiHttpResponse(targetUrl, 200, respHeaders, "some resp body")
     val req = stub[MockXMLHttpRequest]
-    val client = new TestDomClient(req)
+    val client = new TestXhrClient(req)
 
     (req.open _).when(*, *).returns(())
     (req.timeout_= _).when(*).returns(())
@@ -77,7 +77,7 @@ class DomApiHttpClientSpec extends AsyncFlatSpec
     val respHeaders = Map("test_header" -> Seq("test header value"))
     val expectedResult = ApiHttpResponse(targetUrl, 200, respHeaders, "some resp body")
     val req = stub[MockXMLHttpRequest]
-    val client = new TestDomClient(req)
+    val client = new TestXhrClient(req)
 
     (req.open _).when(*, *).returns(())
     (req.timeout_= _).when(*).returns(())
@@ -115,7 +115,7 @@ class DomApiHttpClientSpec extends AsyncFlatSpec
     val respHeaders = Map("test_header" -> Seq("test header value"))
     val expectedResult = ApiHttpResponse(targetUrl, 200, respHeaders, "some resp body")
     val req = stub[MockXMLHttpRequest]
-    val client = new TestDomClient(req)
+    val client = new TestXhrClient(req)
 
     (req.open _).when(*, *).returns(())
     (req.timeout_= _).when(*).returns(())
@@ -155,7 +155,7 @@ class DomApiHttpClientSpec extends AsyncFlatSpec
     val respHeaders = Map("test_header" -> Seq("test header value"))
     val expectedResult = ApiHttpResponse(targetUrl, 200, respHeaders, "some resp body")
     val req = stub[MockXMLHttpRequest]
-    val client = new TestDomClient(req)
+    val client = new TestXhrClient(req)
 
     (req.open _).when(*, *).returns(())
     (req.timeout_= _).when(*).returns(())
@@ -189,7 +189,7 @@ class DomApiHttpClientSpec extends AsyncFlatSpec
     //given
     val targetUrl = s"$baseUrl/api/get/url"
     val req = stub[MockXMLHttpRequest]
-    val client = new TestDomClient(req)
+    val client = new TestXhrClient(req)
 
     (req.open _).when(*, *).returns(())
     (req.timeout_= _).when(*).returns(())
@@ -253,7 +253,7 @@ class DomApiHttpClientSpec extends AsyncFlatSpec
   }
 }
 
-object DomApiHttpClientSpec {
+object XhrApiHttpClientSpec {
 
   @JSExportAll
   trait MockXMLHttpRequest {

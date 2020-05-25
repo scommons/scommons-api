@@ -6,22 +6,22 @@ import sbt.Keys._
 import sbt._
 import scoverage.ScoverageKeys._
 
-object ApiDom extends ApiModule {
+object ApiXhr extends ApiModule {
 
-  override val id: String = "scommons-api-dom"
+  override val id: String = "scommons-api-xhr"
 
-  override val base: File = file("dom")
+  override val base: File = file("xhr")
 
   override def definition: Project = {
     super.definition
       .enablePlugins(ScalaJSPlugin)
       .settings(
-        description := "Common Scala ApiHttpClient implementation using JavaScript XMLHttpRequest",
+        description := "Scala Commons ApiHttpClient implementation using JavaScript XMLHttpRequest",
 
         // disable scoverage, until the following issue is fixed:
         //   https://github.com/scoverage/scalac-scoverage-plugin/issues/196
         coverageEnabled := false,
-        coverageExcludedPackages := "scommons.api.http.dom.raw",
+        coverageExcludedPackages := "scommons.api.http.xhr.raw",
 
         //Opt-in @ScalaJSDefined by default
         scalacOptions += "-P:scalajs:sjsDefinedByDefault"

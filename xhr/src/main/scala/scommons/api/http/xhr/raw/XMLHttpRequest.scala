@@ -1,4 +1,4 @@
-package scommons.api.http.dom.raw
+package scommons.api.http.xhr.raw
 
 import scala.scalajs.js
 import scala.scalajs.js.annotation.JSGlobal

@@ -1,7 +1,7 @@
-package scommons.api.http.dom
+package scommons.api.http.xhr
 
 import scommons.api.http.ApiHttpData._
-import scommons.api.http.dom.DomApiHttpClient._
+import scommons.api.http.xhr.XhrApiHttpClient._
 import scommons.api.http.{ApiHttpClient, ApiHttpData, ApiHttpResponse}
 
 import scala.concurrent.duration._
@@ -10,10 +10,10 @@ import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 import scala.scalajs.js
 import scala.scalajs.js.typedarray._
 
-class DomApiHttpClient(baseUrl: String, defaultTimeout: FiniteDuration = 30.seconds)
+class XhrApiHttpClient(baseUrl: String, defaultTimeout: FiniteDuration = 30.seconds)
   extends ApiHttpClient(baseUrl, defaultTimeout) {
 
-  protected[dom] def execute(method: String,
+  protected[xhr] def execute(method: String,
                              targetUrl: String,
                              params: List[(String, String)],
                              headers: List[(String, String)],
@@ -49,7 +49,7 @@ class DomApiHttpClient(baseUrl: String, defaultTimeout: FiniteDuration = 30.seco
     }
   }
 
-  private[dom] def createRequest(): raw.XMLHttpRequest = new raw.XMLHttpRequest()
+  private[xhr] def createRequest(): raw.XMLHttpRequest = new raw.XMLHttpRequest()
 
   private def execute(req: raw.XMLHttpRequest, body: Option[String]): Future[raw.XMLHttpRequest] = {
     val promise = Promise[raw.XMLHttpRequest]()
@@ -69,7 +69,7 @@ class DomApiHttpClient(baseUrl: String, defaultTimeout: FiniteDuration = 30.seco
   }
 }
 
-object DomApiHttpClient {
+object XhrApiHttpClient {
 
   private val headersLineRegex = """[\r\n]+""".r
   private val headersValueRegex = """: """.r
@@ -81,7 +81,7 @@ object DomApiHttpClient {
     }.toMap
   }
 
-  private[dom] def getBodyAsBytes(response: js.Any): Seq[Byte] = {
+  private[xhr] def getBodyAsBytes(response: js.Any): Seq[Byte] = {
     if (response == null || js.isUndefined(response)) Nil
     else {
       //TODO: handle Blob response as well
@@ -89,7 +89,7 @@ object DomApiHttpClient {
     }
   }
   
-  private[dom] def getFullUrl(url: String, params: List[(String, String)]): String = {
+  private[xhr] def getFullUrl(url: String, params: List[(String, String)]): String = {
 
     def enc(p: String) = js.URIUtils.encodeURIComponent(p)
 
