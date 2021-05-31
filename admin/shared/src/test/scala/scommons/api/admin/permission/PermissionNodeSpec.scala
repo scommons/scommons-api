@@ -1,9 +1,10 @@
 package scommons.api.admin.permission
 
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 import scommons.api.admin.permission.PermissionNodeSpec._
 
-class PermissionNodeSpec extends FlatSpec with Matchers {
+class PermissionNodeSpec extends AnyFlatSpec with Matchers {
 
   it should "fail to create new PermissionNode if name is empty" in {
     //when

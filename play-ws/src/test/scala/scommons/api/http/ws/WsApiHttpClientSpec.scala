@@ -7,21 +7,24 @@ import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import akka.util.ByteString
 import org.mockito.ArgumentCaptor
-import org.mockito.Matchers.any
+import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito._
+import org.mockito.stubbing.Stubber
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.mockito.MockitoSugar
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 import org.scalatest.time.{Millis, Seconds, Span}
-import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, FlatSpec, Matchers}
+import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
+import org.scalatestplus.mockito.MockitoSugar
 import play.api.libs.ws.ahc.StandaloneAhcWSClient
 import play.api.libs.ws.{EmptyBody, InMemoryBody, StandaloneWSRequest, StandaloneWSResponse}
 import scommons.api.http.ApiHttpData.{StringData, UrlEncodedFormData}
 import scommons.api.http.{ApiHttpData, ApiHttpResponse}
 
-import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration._
+import scala.concurrent.{ExecutionContext, Future}
 
-class WsApiHttpClientSpec extends FlatSpec
+class WsApiHttpClientSpec extends AnyFlatSpec
   with Matchers
   with BeforeAndAfterAll
   with BeforeAndAfterEach
@@ -178,7 +181,7 @@ class WsApiHttpClientSpec extends FlatSpec
     //given
     val targetUrl = s"$baseUrl/api/get/url"
 
-    doReturn(Future.failed(new TimeoutException()))
+    doReturnSafe(Future.failed(new TimeoutException()))
       .when(client).execute(any[StandaloneWSRequest])
 
     //when
@@ -189,7 +192,7 @@ class WsApiHttpClientSpec extends FlatSpec
 
     assertRequest("GET", targetUrl, params, headers, None, timeout)
 
-    verifyZeroInteractions(response)
+    verifyNoInteractions(response)
   }
   
   private def assertApiHttpResponse(result: ApiHttpResponse, expected: ApiHttpResponse): Unit = {
@@ -207,7 +210,8 @@ class WsApiHttpClientSpec extends FlatSpec
                             body: Option[ApiHttpData],
                             timeout: FiniteDuration): Unit = {
 
-    val reqCaptor = ArgumentCaptor.forClass(classOf[StandaloneWSRequest])
+    val reqCaptor: ArgumentCaptor[StandaloneWSRequest] =
+      ArgumentCaptor.forClass(classOf[StandaloneWSRequest])
     verify(client).execute(reqCaptor.capture())
 
     val req = reqCaptor.getValue
@@ -236,4 +240,6 @@ class WsApiHttpClientSpec extends FlatSpec
         }
     }
   }
+
+  private def doReturnSafe(any: Any, more: AnyRef*): Stubber = doReturn(any, more: _*)
 }

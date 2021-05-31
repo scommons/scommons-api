@@ -1,7 +1,9 @@
 package scommons.api.http.xhr
 
 import org.scalamock.scalatest.AsyncMockFactory
-import org.scalatest.{Assertion, AsyncFlatSpec, Inside, Matchers}
+import org.scalatest.flatspec.AsyncFlatSpec
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.{Assertion, Inside}
 import scommons.api.http.ApiHttpData.{StringData, UrlEncodedFormData}
 import scommons.api.http.xhr.XhrApiHttpClient._
 import scommons.api.http.xhr.XhrApiHttpClientSpec.MockXMLHttpRequest

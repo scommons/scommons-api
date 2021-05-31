@@ -1,11 +1,12 @@
 package scommons.api.jodatime
 
 import org.joda.time.{DateTime, LocalDate, LocalTime}
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 import play.api.libs.json._
 import scommons.api.jodatime.JodaTimeImplicitsSpec._
 
-class JodaTimeImplicitsSpec extends FlatSpec with Matchers {
+class JodaTimeImplicitsSpec extends AnyFlatSpec with Matchers {
 
   private val expectedData = TestData(
     firstName = "John",

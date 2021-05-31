@@ -1,7 +1,9 @@
 package scommons.api.http
 
 import org.scalamock.scalatest.AsyncMockFactory
-import org.scalatest.{AsyncFlatSpec, Inside, Matchers}
+import org.scalatest.flatspec.AsyncFlatSpec
+import org.scalatest.Inside
+import org.scalatest.matchers.should.Matchers
 import play.api.libs.json.Json.{stringify, toJson}
 import play.api.libs.json._
 import scommons.api.http.ApiHttpClient._

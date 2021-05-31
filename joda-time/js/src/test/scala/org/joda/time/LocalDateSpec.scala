@@ -1,10 +1,11 @@
 package org.joda.time
 
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
 import scala.scalajs.js
 
-class LocalDateSpec extends FlatSpec with Matchers {
+class LocalDateSpec extends AnyFlatSpec with Matchers {
 
   it should "fail if LocalDate value is not ISO8601 time formatted string" in {
     //given
