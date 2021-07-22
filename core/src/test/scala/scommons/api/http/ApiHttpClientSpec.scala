@@ -181,8 +181,8 @@ class ApiHttpClientSpec extends AsyncFlatSpec
 
     //then
     inside(ex) { case ApiHttpStatusException(error, resp) =>
-      error shouldBe {
-        "Fail to parse http response, error: List((/name,List(JsonValidationError(List(error.path.missing),WrappedArray()))))"
+      error should startWith {
+        "Fail to parse http response, error: List((/name,List(JsonValidationError(List(error.path.missing)"
       }
       resp shouldBe response
     }

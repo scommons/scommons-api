@@ -1,8 +1,10 @@
 package scommons.api.http
 
+import scala.collection.immutable.ArraySeq
+
 class ApiHttpResponse(val url: String,
                       val status: Int,
-                      val headers: Map[String, Seq[String]],
+                      val headers: Map[String, scala.collection.Seq[String]],
                       getBody: => String,
                       getBodyAsBytes: => Seq[Byte]) {
 
@@ -15,7 +17,11 @@ class ApiHttpResponse(val url: String,
 
 object ApiHttpResponse {
 
-  def apply(url: String, status: Int, headers: Map[String, Seq[String]], body: String): ApiHttpResponse = {
-    new ApiHttpResponse(url, status, headers, body, body.getBytes)
+  def apply(url: String,
+            status: Int,
+            headers: Map[String, scala.collection.Seq[String]],
+            body: String): ApiHttpResponse = {
+    
+    new ApiHttpResponse(url, status, headers, body, ArraySeq.unsafeWrapArray(body.getBytes))
   }
 }

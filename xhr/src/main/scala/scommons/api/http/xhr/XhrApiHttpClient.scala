@@ -4,6 +4,7 @@ import scommons.api.http.ApiHttpData._
 import scommons.api.http.xhr.XhrApiHttpClient._
 import scommons.api.http.{ApiHttpClient, ApiHttpData, ApiHttpResponse}
 
+import scala.collection.immutable.ArraySeq
 import scala.concurrent.duration._
 import scala.concurrent.{Future, Promise}
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
@@ -85,7 +86,8 @@ object XhrApiHttpClient {
     if (response == null || js.isUndefined(response)) Nil
     else {
       //TODO: handle Blob response as well
-      new Int8Array(response.asInstanceOf[ArrayBuffer]).toArray
+      val resArr = new Int8Array(response.asInstanceOf[ArrayBuffer]).toArray
+      ArraySeq.unsafeWrapArray(resArr)
     }
   }
   

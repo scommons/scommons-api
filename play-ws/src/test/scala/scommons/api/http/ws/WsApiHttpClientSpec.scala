@@ -2,7 +2,6 @@ package scommons.api.http.ws
 
 import java.net.URLEncoder
 import java.util.concurrent.TimeoutException
-
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import akka.util.ByteString
@@ -14,7 +13,7 @@ import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.time.{Millis, Seconds, Span}
-import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
+import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Inside}
 import org.scalatestplus.mockito.MockitoSugar
 import play.api.libs.ws.ahc.StandaloneAhcWSClient
 import play.api.libs.ws.{EmptyBody, InMemoryBody, StandaloneWSRequest, StandaloneWSResponse}
@@ -26,6 +25,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 class WsApiHttpClientSpec extends AnyFlatSpec
   with Matchers
+  with Inside
   with BeforeAndAfterAll
   with BeforeAndAfterEach
   with MockitoSugar
@@ -58,7 +58,7 @@ class WsApiHttpClientSpec extends AnyFlatSpec
   private val timeout = 5.seconds
 
   override protected def beforeEach(): Unit = {
-    reset(client, response)
+    reset[AnyRef](client, response)
   }
 
   override protected def afterEach(): Unit = {
@@ -82,7 +82,9 @@ class WsApiHttpClientSpec extends AnyFlatSpec
     when(response.bodyAsBytes).thenReturn(ByteString.apply(expectedResult.body))
 
     //when
-    val Some(result) = client.execute("GET", targetUrl, params, headers, body, timeout).futureValue
+    val result = inside(client.execute("GET", targetUrl, params, headers, body, timeout).futureValue) {
+      case Some(res) => res
+    }
 
     //then
     assertApiHttpResponse(result, expectedResult)
@@ -108,7 +110,9 @@ class WsApiHttpClientSpec extends AnyFlatSpec
     when(response.bodyAsBytes).thenReturn(ByteString.apply(expectedResult.body))
 
     //when
-    val Some(result) = client.execute("POST", targetUrl, params, headers, body, timeout).futureValue
+    val result = inside(client.execute("POST", targetUrl, params, headers, body, timeout).futureValue) {
+      case Some(res) => res
+    }
 
     //then
     assertApiHttpResponse(result, expectedResult)
@@ -134,7 +138,9 @@ class WsApiHttpClientSpec extends AnyFlatSpec
     when(response.bodyAsBytes).thenReturn(ByteString.apply(expectedResult.body))
 
     //when
-    val Some(result) = client.execute("POST", targetUrl, params, headers, body, timeout).futureValue
+    val result = inside(client.execute("POST", targetUrl, params, headers, body, timeout).futureValue) {
+      case Some(res) => res
+    }
 
     //then
     assertApiHttpResponse(result, expectedResult)
@@ -163,7 +169,9 @@ class WsApiHttpClientSpec extends AnyFlatSpec
     when(response.bodyAsBytes).thenReturn(ByteString.apply(expectedResult.body))
 
     //when
-    val Some(result) = client.execute("POST", targetUrl, params, headers, body, timeout).futureValue
+    val result = inside(client.execute("POST", targetUrl, params, headers, body, timeout).futureValue) {
+      case Some(res) => res
+    }
 
     //then
     assertApiHttpResponse(result, expectedResult)
