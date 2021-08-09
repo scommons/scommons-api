@@ -32,7 +32,7 @@ class XhrApiHttpClientSpec extends AsyncFlatSpec
 
   private val params = List("p1" -> "1", "p2" -> "2")
   private val headers = List("h1" -> "11", "h2" -> "22")
-  private val timeout = 5.seconds
+  private val defTimeout = 5.seconds
 
   it should "execute request without body" in {
     //given
@@ -40,33 +40,41 @@ class XhrApiHttpClientSpec extends AsyncFlatSpec
     val body: Option[ApiHttpData] = None
     val respHeaders = Map("test_header" -> Seq("test header value"))
     val expectedResult = ApiHttpResponse(targetUrl, 200, respHeaders, "some resp body")
-    val req = stub[MockXMLHttpRequest]
+    val open = mockFunction[String, String, Unit]
+    val timeout = mockFunction[Double, Unit]
+    val onreadystatechange = mockFunction[js.Function1[js.Object, _], Unit]
+    val readyState = mockFunction[Int]
+    val send = mockFunction[js.Any, Unit]
+    val setRequestHeader = mockFunction[String, String, Unit]
+    val status = mockFunction[Int]
+    val getAllResponseHeaders = mockFunction[String]
+    val responseText = mockFunction[String]
+    val response = mockFunction[js.Any]
+    val req = new MockXMLHttpRequest(
+      open, timeout, onreadystatechange, readyState, send, setRequestHeader, status,
+      getAllResponseHeaders, responseText, response
+    )
     val client = new TestXhrClient(req)
 
-    (req.open _).when(*, *).returns(())
-    (req.timeout_= _).when(*).returns(())
-    (req.setRequestHeader _).when(*, *).returns(())
-    (req.onreadystatechange_= _).when(*).onCall { value: js.Function1[js.Object, _] =>
+    open.expects("GET", getFullUrl(targetUrl, params)).returns(())
+    timeout.expects(defTimeout.toMillis).returns(())
+    headers.foreach { case (name, value) =>
+      setRequestHeader.expects(name, value)
+    }
+    onreadystatechange.expects(*).onCall { value: js.Function1[js.Object, _] =>
       value(null)
       ()
     }
-    (req.readyState _).when().returns(4)
-    (req.send _).when(*).returns(())
-    (req.status _).when().returns(expectedResult.status)
-    (req.getAllResponseHeaders _).when().returns("test_header: test header value\r\n")
-    (req.responseText _).when().returns(expectedResult.body)
-    (req.response _).when().returns(expectedResult.bodyAsBytes.toArray.toTypedArray.buffer)
+    readyState.expects().returns(4)
+    send.expects(().asInstanceOf[js.Any])
+    status.expects().returns(expectedResult.status).twice()
+    getAllResponseHeaders.expects().returns("test_header: test header value\r\n")
+    responseText.expects().returns(expectedResult.body)
+    response.expects().returns(expectedResult.bodyAsBytes.toArray.toTypedArray.buffer)
 
     //when
-    client.execute("GET", targetUrl, params, headers, body, timeout).map(inside(_) { case Some(result) =>
+    client.execute("GET", targetUrl, params, headers, body, defTimeout).map(inside(_) { case Some(result) =>
       //then
-      (req.open _).verify("GET", getFullUrl(targetUrl, params))
-      (req.timeout_= _).verify(timeout.toMillis)
-      headers.foreach { x =>
-        (req.setRequestHeader _).verify(x._1, x._2)
-      }
-      (req.send _).verify(().asInstanceOf[js.Any])
-
       assertApiHttpResponse(result, expectedResult)
     })
   }
@@ -78,33 +86,41 @@ class XhrApiHttpClientSpec extends AsyncFlatSpec
     val body = Some(StringData(data, "text/plain"))
     val respHeaders = Map("test_header" -> Seq("test header value"))
     val expectedResult = ApiHttpResponse(targetUrl, 200, respHeaders, "some resp body")
-    val req = stub[MockXMLHttpRequest]
+    val open = mockFunction[String, String, Unit]
+    val timeout = mockFunction[Double, Unit]
+    val onreadystatechange = mockFunction[js.Function1[js.Object, _], Unit]
+    val readyState = mockFunction[Int]
+    val send = mockFunction[js.Any, Unit]
+    val setRequestHeader = mockFunction[String, String, Unit]
+    val status = mockFunction[Int]
+    val getAllResponseHeaders = mockFunction[String]
+    val responseText = mockFunction[String]
+    val response = mockFunction[js.Any]
+    val req = new MockXMLHttpRequest(
+      open, timeout, onreadystatechange, readyState, send, setRequestHeader, status,
+      getAllResponseHeaders, responseText, response
+    )
     val client = new TestXhrClient(req)
 
-    (req.open _).when(*, *).returns(())
-    (req.timeout_= _).when(*).returns(())
-    (req.setRequestHeader _).when(*, *).returns(())
-    (req.onreadystatechange_= _).when(*).onCall { value: js.Function1[js.Object, _] =>
+    open.expects("POST", getFullUrl(targetUrl, params)).returns(())
+    timeout.expects(defTimeout.toMillis).returns(())
+    (headers ++ Map("Content-Type" -> "text/plain")).foreach { case (name, value) =>
+      setRequestHeader.expects(name, value)
+    }
+    onreadystatechange.expects(*).onCall { value: js.Function1[js.Object, _] =>
       value(null)
       ()
     }
-    (req.readyState _).when().returns(4)
-    (req.send _).when(*).returns(())
-    (req.status _).when().returns(expectedResult.status)
-    (req.getAllResponseHeaders _).when().returns("test_header: test header value\r\n")
-    (req.responseText _).when().returns(expectedResult.body)
-    (req.response _).when().returns(expectedResult.bodyAsBytes.toArray.toTypedArray.buffer)
+    readyState.expects().returns(4)
+    send.expects(data.asInstanceOf[js.Any])
+    status.expects().returns(expectedResult.status).twice()
+    getAllResponseHeaders.expects().returns("test_header: test header value\r\n")
+    responseText.expects().returns(expectedResult.body)
+    response.expects().returns(expectedResult.bodyAsBytes.toArray.toTypedArray.buffer)
 
     //when
-    client.execute("POST", targetUrl, params, headers, body, timeout).map(inside(_) { case Some(result) =>
+    client.execute("POST", targetUrl, params, headers, body, defTimeout).map(inside(_) { case Some(result) =>
       //then
-      (req.open _).verify("POST", getFullUrl(targetUrl, params))
-      (req.timeout_= _).verify(timeout.toMillis)
-      (headers ++ Map("Content-Type" -> "text/plain")).foreach { x =>
-        (req.setRequestHeader _).verify(x._1, x._2)
-      }
-      (req.send _).verify(data.asInstanceOf[js.Any])
-
       assertApiHttpResponse(result, expectedResult)
     })
   }
@@ -116,33 +132,41 @@ class XhrApiHttpClientSpec extends AsyncFlatSpec
     val body = Some(StringData(data))
     val respHeaders = Map("test_header" -> Seq("test header value"))
     val expectedResult = ApiHttpResponse(targetUrl, 200, respHeaders, "some resp body")
-    val req = stub[MockXMLHttpRequest]
+    val open = mockFunction[String, String, Unit]
+    val timeout = mockFunction[Double, Unit]
+    val onreadystatechange = mockFunction[js.Function1[js.Object, _], Unit]
+    val readyState = mockFunction[Int]
+    val send = mockFunction[js.Any, Unit]
+    val setRequestHeader = mockFunction[String, String, Unit]
+    val status = mockFunction[Int]
+    val getAllResponseHeaders = mockFunction[String]
+    val responseText = mockFunction[String]
+    val response = mockFunction[js.Any]
+    val req = new MockXMLHttpRequest(
+      open, timeout, onreadystatechange, readyState, send, setRequestHeader, status,
+      getAllResponseHeaders, responseText, response
+    )
     val client = new TestXhrClient(req)
 
-    (req.open _).when(*, *).returns(())
-    (req.timeout_= _).when(*).returns(())
-    (req.setRequestHeader _).when(*, *).returns(())
-    (req.onreadystatechange_= _).when(*).onCall { value: js.Function1[js.Object, _] =>
+    open.expects("POST", getFullUrl(targetUrl, params)).returns(())
+    timeout.expects(defTimeout.toMillis).returns(())
+    (headers ++ Map("Content-Type" -> "application/json")).foreach { case (name, value) =>
+      setRequestHeader.expects(name, value)
+    }
+    onreadystatechange.expects(*).onCall { value: js.Function1[js.Object, _] =>
       value(null)
       ()
     }
-    (req.readyState _).when().returns(4)
-    (req.send _).when(*).returns(())
-    (req.status _).when().returns(expectedResult.status)
-    (req.getAllResponseHeaders _).when().returns("test_header: test header value\r\n")
-    (req.responseText _).when().returns(expectedResult.body)
-    (req.response _).when().returns(expectedResult.bodyAsBytes.toArray.toTypedArray.buffer)
+    readyState.expects().returns(4)
+    send.expects(data.asInstanceOf[js.Any])
+    status.expects().returns(expectedResult.status).twice()
+    getAllResponseHeaders.expects().returns("test_header: test header value\r\n")
+    responseText.expects().returns(expectedResult.body)
+    response.expects().returns(expectedResult.bodyAsBytes.toArray.toTypedArray.buffer)
 
     //when
-    client.execute("POST", targetUrl, params, headers, body, timeout).map(inside(_) { case Some(result) =>
+    client.execute("POST", targetUrl, params, headers, body, defTimeout).map(inside(_) { case Some(result) =>
       //then
-      (req.open _).verify("POST", getFullUrl(targetUrl, params))
-      (req.timeout_= _).verify(timeout.toMillis)
-      (headers ++ Map("Content-Type" -> "application/json")).foreach { x =>
-        (req.setRequestHeader _).verify(x._1, x._2)
-      }
-      (req.send _).verify(data.asInstanceOf[js.Any])
-
       assertApiHttpResponse(result, expectedResult)
     })
   }
@@ -156,33 +180,41 @@ class XhrApiHttpClientSpec extends AsyncFlatSpec
     )))
     val respHeaders = Map("test_header" -> Seq("test header value"))
     val expectedResult = ApiHttpResponse(targetUrl, 200, respHeaders, "some resp body")
-    val req = stub[MockXMLHttpRequest]
+    val open = mockFunction[String, String, Unit]
+    val timeout = mockFunction[Double, Unit]
+    val onreadystatechange = mockFunction[js.Function1[js.Object, _], Unit]
+    val readyState = mockFunction[Int]
+    val send = mockFunction[js.Any, Unit]
+    val setRequestHeader = mockFunction[String, String, Unit]
+    val status = mockFunction[Int]
+    val getAllResponseHeaders = mockFunction[String]
+    val responseText = mockFunction[String]
+    val response = mockFunction[js.Any]
+    val req = new MockXMLHttpRequest(
+      open, timeout, onreadystatechange, readyState, send, setRequestHeader, status,
+      getAllResponseHeaders, responseText, response
+    )
     val client = new TestXhrClient(req)
 
-    (req.open _).when(*, *).returns(())
-    (req.timeout_= _).when(*).returns(())
-    (req.setRequestHeader _).when(*, *).returns(())
-    (req.onreadystatechange_= _).when(*).onCall { value: js.Function1[js.Object, _] =>
+    open.expects("POST", getFullUrl(targetUrl, params)).returns(())
+    timeout.expects(defTimeout.toMillis).returns(())
+    (headers ++ Map("Content-Type" -> "application/x-www-form-urlencoded")).foreach { case (name, value) =>
+      setRequestHeader.expects(name, value)
+    }
+    onreadystatechange.expects(*).onCall { value: js.Function1[js.Object, _] =>
       value(null)
       ()
     }
-    (req.readyState _).when().returns(4)
-    (req.send _).when(*).returns(())
-    (req.status _).when().returns(expectedResult.status)
-    (req.getAllResponseHeaders _).when().returns("test_header: test header value\r\n")
-    (req.responseText _).when().returns(expectedResult.body)
-    (req.response _).when().returns(expectedResult.bodyAsBytes.toArray.toTypedArray.buffer)
+    readyState.expects().returns(4)
+    send.expects("param1=value1&param1=value2&param2=value3".asInstanceOf[js.Any])
+    status.expects().returns(expectedResult.status).twice()
+    getAllResponseHeaders.expects().returns("test_header: test header value\r\n")
+    responseText.expects().returns(expectedResult.body)
+    response.expects().returns(expectedResult.bodyAsBytes.toArray.toTypedArray.buffer)
 
     //when
-    client.execute("POST", targetUrl, params, headers, body, timeout).map(inside(_) { case Some(result) =>
+    client.execute("POST", targetUrl, params, headers, body, defTimeout).map(inside(_) { case Some(result) =>
       //then
-      (req.open _).verify("POST", getFullUrl(targetUrl, params))
-      (req.timeout_= _).verify(timeout.toMillis)
-      (headers ++ Map("Content-Type" -> "application/x-www-form-urlencoded")).foreach { x =>
-        (req.setRequestHeader _).verify(x._1, x._2)
-      }
-      (req.send _).verify("param1=value1&param1=value2&param2=value3".asInstanceOf[js.Any])
-
       assertApiHttpResponse(result, expectedResult)
     })
   }
@@ -190,30 +222,38 @@ class XhrApiHttpClientSpec extends AsyncFlatSpec
   it should "return None if timed out when execute request" in {
     //given
     val targetUrl = s"$baseUrl/api/get/url"
-    val req = stub[MockXMLHttpRequest]
+    val open = mockFunction[String, String, Unit]
+    val timeout = mockFunction[Double, Unit]
+    val onreadystatechange = mockFunction[js.Function1[js.Object, _], Unit]
+    val readyState = mockFunction[Int]
+    val send = mockFunction[js.Any, Unit]
+    val setRequestHeader = mockFunction[String, String, Unit]
+    val status = mockFunction[Int]
+    val getAllResponseHeaders = mockFunction[String]
+    val responseText = mockFunction[String]
+    val response = mockFunction[js.Any]
+    val req = new MockXMLHttpRequest(
+      open, timeout, onreadystatechange, readyState, send, setRequestHeader, status,
+      getAllResponseHeaders, responseText, response
+    )
     val client = new TestXhrClient(req)
 
-    (req.open _).when(*, *).returns(())
-    (req.timeout_= _).when(*).returns(())
-    (req.setRequestHeader _).when(*, *).returns(())
-    (req.onreadystatechange_= _).when(*).onCall { value: js.Function1[js.Object, _] =>
+    open.expects("GET", getFullUrl(targetUrl, params)).returns(())
+    timeout.expects(defTimeout.toMillis).returns(())
+    headers.foreach { case (name, value) =>
+      setRequestHeader.expects(name, value)
+    }
+    onreadystatechange.expects(*).onCall { value: js.Function1[js.Object, _] =>
       value(null)
       ()
     }
-    (req.readyState _).when().returns(4)
-    (req.send _).when(*).returns(())
-    (req.status _).when().returns(0)
+    readyState.expects().returns(4)
+    send.expects(().asInstanceOf[js.Any])
+    status.expects().returns(0)
 
     //when
-    client.execute("GET", targetUrl, params, headers, None, timeout).map { result =>
+    client.execute("GET", targetUrl, params, headers, None, defTimeout).map { result =>
       //then
-      (req.open _).verify("GET", getFullUrl(targetUrl, params))
-      (req.timeout_= _).verify(timeout.toMillis)
-      headers.foreach { x =>
-        (req.setRequestHeader _).verify(x._1, x._2)
-      }
-      (req.send _).verify(().asInstanceOf[js.Any])
-
       result shouldBe None
     }
   }
@@ -258,26 +298,37 @@ class XhrApiHttpClientSpec extends AsyncFlatSpec
 object XhrApiHttpClientSpec {
 
   @JSExportAll
-  trait MockXMLHttpRequest {
+  class MockXMLHttpRequest(
+                            openMock: (String, String) => Unit,
+                            timeoutMock: Double => Unit,
+                            onreadystatechangeMock: js.Function1[js.Object, _] => Unit,
+                            readyStateMock: () => Int,
+                            sendMock: js.Any => Unit,
+                            setRequestHeaderMock: (String, String) => Unit,
+                            statusMock: () => Int,
+                            getAllResponseHeadersMock: () => String,
+                            responseTextMock: () => String,
+                            responseMock: () => js.Any
+                          ) {
 
-    def open(method: String, url: String): Unit
+    def open(method: String, url: String): Unit = openMock(method, url)
 
-    def timeout_= (value: Double): Unit
+    def timeout_=(value: Double): Unit = timeoutMock(value)
     
-    def onreadystatechange_= (value: js.Function1[js.Object, _]): Unit
+    def onreadystatechange_=(value: js.Function1[js.Object, _]): Unit = onreadystatechangeMock(value)
 
-    def readyState: Int
+    def readyState: Int = readyStateMock()
 
-    def send(data: js.Any = ()): Unit
+    def send(data: js.Any): Unit = sendMock(data)
 
-    def setRequestHeader(header: String, value: String): Unit
+    def setRequestHeader(header: String, value: String): Unit = setRequestHeaderMock(header, value)
 
-    def status: Int
+    def status: Int = statusMock()
 
-    def getAllResponseHeaders(): String
+    def getAllResponseHeaders(): String = getAllResponseHeadersMock()
 
-    def responseText: String
+    def responseText: String = responseTextMock()
 
-    def response: js.Any
+    def response: js.Any = responseMock()
   }
 }

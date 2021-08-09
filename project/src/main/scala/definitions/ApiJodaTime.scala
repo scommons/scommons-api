@@ -26,9 +26,13 @@ object ApiJodaTime {
         TestLibs.scalaMockJs.value % "test"
       )
     ).jvmSettings(
-      // Add JVM-specific settings here
+      Seq(
+        libraryDependencies ++= Seq(
+          Libs.jodaTime.value
+        )
+      ) ++ JvmModule.settings: _*
     ).jsSettings(
-      // Add JS-specific settings here
+      ScalaJsModule.settings: _*
     )
 
   lazy val jvm: Project = `scommons-api-joda-time`.jvm

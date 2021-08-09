@@ -15,16 +15,14 @@ object ApiXhr extends ApiModule {
   override def definition: Project = {
     super.definition
       .enablePlugins(ScalaJSPlugin)
+      .settings(ScalaJsModule.settings: _*)
       .settings(
         description := "Scala Commons ApiHttpClient implementation using JavaScript XMLHttpRequest",
 
         // disable scoverage, until the following issue is fixed:
         //   https://github.com/scoverage/scalac-scoverage-plugin/issues/196
         coverageEnabled := false,
-        coverageExcludedPackages := "scommons.api.http.xhr.raw",
-
-        //Opt-in @ScalaJSDefined by default
-        scalacOptions += "-P:scalajs:sjsDefinedByDefault"
+        coverageExcludedPackages := "scommons.api.http.xhr.raw"
       )
   }
 

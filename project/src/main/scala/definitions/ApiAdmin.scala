@@ -27,8 +27,10 @@ object ApiAdmin {
       )
     ).jvmSettings(
       // Add JVM-specific settings here
+      JvmModule.settings: _*
     ).jsSettings(
       // Add JS-specific settings here
+      ScalaJsModule.settings: _*
     )
 
   lazy val jvm: Project = `scommons-api-admin`.jvm

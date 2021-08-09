@@ -5,9 +5,8 @@ import sbt.Keys._
 import sbt._
 import sbtcrossproject.CrossPlugin.autoImport._
 import sbtcrossproject.{CrossProject, JVMPlatform}
-import scommons.sbtplugin.project.CommonModule
-
 import scalajscrossproject.ScalaJSCrossPlugin.autoImport._
+import scommons.sbtplugin.project.CommonModule
 
 object ApiCore {
 
@@ -28,10 +27,13 @@ object ApiCore {
         TestLibs.scalaMockJs.value % "test"
       )
     ).jvmSettings(
-      // Add JVM-specific settings here
+      Seq(
+        libraryDependencies ++= Seq(
+          Libs.jodaTime.value
+        )
+      ) ++ JvmModule.settings: _*
     ).jsSettings(
-      //Opt-in @ScalaJSDefined by default
-      scalacOptions += "-P:scalajs:sjsDefinedByDefault"
+      ScalaJsModule.settings: _*
     )
 
   lazy val jvm: Project = `scommons-api-core`.jvm
