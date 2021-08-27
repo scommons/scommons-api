@@ -6,11 +6,11 @@ val scalaJSVersion =
 
 if (scalaJSVersion.startsWith("0.6")) {
   //addSbtPlugin(("org.scommons.sbt" % "sbt-scommons-plugin-sjs06" % "0.5.0-SNAPSHOT").changing())
-  addSbtPlugin("org.scommons.sbt" % "sbt-scommons-plugin-sjs06" % "0.5.0")
+  addSbtPlugin("org.scommons.sbt" % "sbt-scommons-plugin-sjs06" % "0.6.0")
 }
 else {
   //addSbtPlugin(("org.scommons.sbt" % "sbt-scommons-plugin" % "0.5.0-SNAPSHOT").changing())
-  addSbtPlugin("org.scommons.sbt" % "sbt-scommons-plugin" % "0.5.0")
+  addSbtPlugin("org.scommons.sbt" % "sbt-scommons-plugin" % "0.6.0")
 }
 
 addSbtPlugin("org.xerial.sbt" % "sbt-sonatype" % "3.9.5")
