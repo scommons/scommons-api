@@ -17,11 +17,6 @@ object ScalaJsModule {
     scalaJSLinkerConfig in Test ~= {
       _.withSourceMap(true)
     },
-    //Opt-in @ScalaJSDefined by default
-    scalacOptions += {
-      if (scalaJSVersion.startsWith("0.6")) "-P:scalajs:sjsDefinedByDefault"
-      else ""
-    },
 
     //TODO: remove these temporal fixes for Scala.js 1.1+ and scoverage
     coverageScalacPluginVersion := {
