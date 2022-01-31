@@ -5,7 +5,6 @@ import org.scalajs.sbtplugin.ScalaJSPlugin.autoImport._
 import sbt.Keys._
 import sbt._
 import scoverage.ScoverageKeys.{coverageEnabled, coverageScalacPluginVersion}
-import scoverage.ScoverageSbtPlugin._
 
 object ScalaJsModule {
 
@@ -26,14 +25,14 @@ object ScalaJsModule {
     },
     libraryDependencies ~= { modules =>
       if (scalaJSVersion.startsWith("0.6")) modules
-      else modules.filter(_.organization != OrgScoverage)
+      else modules.filter(_.organization != "org.scoverage")
     },
     libraryDependencies ++= {
       if (coverageEnabled.value) {
         if (scalaJSVersion.startsWith("0.6")) Nil
         else Seq(
-          OrgScoverage %% s"${ScalacRuntimeArtifact}_sjs1" % coverageScalacPluginVersion.value,
-          OrgScoverage %% ScalacPluginArtifact % coverageScalacPluginVersion.value % ScoveragePluginConfig.name
+          "org.scoverage" %% "scalac-scoverage-runtime_sjs1" % coverageScalacPluginVersion.value,
+          "org.scoverage" %% "scalac-scoverage-plugin" % coverageScalacPluginVersion.value % "scoveragePlugin"
         )
       }
       else Nil
