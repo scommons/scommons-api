@@ -11,7 +11,6 @@ object ApiPlayWs extends ApiModule {
   override val base: File = file("play-ws")
 
   override def definition: Project = super.definition
-    .settings(JvmModule.settings: _*)
     .settings(
       description := "Common Scala ApiHttpClient implementation using play-ws library"
     )

@@ -26,11 +26,9 @@ object ApiJodaTime {
         TestLibs.scalaMockJs.value % "test"
       )
     ).jvmSettings(
-      Seq(
-        libraryDependencies ++= Seq(
-          Libs.jodaTime.value
-        )
-      ) ++ JvmModule.settings: _*
+      libraryDependencies ++= Seq(
+        Libs.jodaTime.value
+      )
     ).jsSettings(
       ScalaJsModule.settings: _*
     )
