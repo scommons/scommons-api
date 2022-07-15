@@ -6,7 +6,7 @@ lazy val `scommons-api` = (project in file("."))
   .settings(CommonModule.settings: _*)
   .settings(ApiModule.settings: _*)
   .settings(
-    skip in publish := true,
+    publish / skip := true,
     publish := ((): Unit),
     publishLocal := ((): Unit),
     publishM2 := ((): Unit)
