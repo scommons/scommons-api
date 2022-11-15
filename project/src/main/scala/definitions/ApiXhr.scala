@@ -1,6 +1,6 @@
 package definitions
 
-import common.TestLibs
+import common.{Libs, TestLibs}
 import org.scalajs.sbtplugin.ScalaJSPlugin
 import sbt.Keys._
 import sbt._
@@ -34,6 +34,7 @@ object ApiXhr extends ApiModule {
 
   override val testDependencies: Def.Initialize[Seq[ModuleID]] = Def.setting(Seq(
     TestLibs.scalaTestJs.value,
-    TestLibs.scalaMockJs.value
+    TestLibs.scalaMockJs.value,
+    Libs.scalaJsJavaSecureRandom.value
   ).map(_ % "test"))
 }

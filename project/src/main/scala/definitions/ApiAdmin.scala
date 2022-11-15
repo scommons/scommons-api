@@ -1,6 +1,6 @@
 package definitions
 
-import common.TestLibs
+import common.{Libs, TestLibs}
 import sbt.Keys._
 import sbt._
 import sbtcrossproject.CrossPlugin.autoImport._
@@ -29,7 +29,11 @@ object ApiAdmin {
       // Add JVM-specific settings here
     ).jsSettings(
       // Add JS-specific settings here
-      ScalaJsModule.settings: _*
+      ScalaJsModule.settings ++ Seq(
+        libraryDependencies ++= Seq(
+          Libs.scalaJsJavaSecureRandom.value % "test"
+        )
+      ): _*
     )
 
   lazy val jvm: Project = `scommons-api-admin`.jvm
