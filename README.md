@@ -85,4 +85,4 @@ sbt test
 
 ## Documentation
 
-You can find more documentation [here](https://scommons.org/scommons-api)
+You can find more documentation [here](https://scommons.github.io/scommons-api)
